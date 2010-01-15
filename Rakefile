@@ -31,3 +31,9 @@ namespace :gem do
     sh "gem install #{file}" 
   end
 end
+
+Rake::TestTask.new('test') do |t|
+  t.libs << 'ext' 
+  t.warning = true
+  t.verbose = true
+end

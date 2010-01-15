@@ -154,4 +154,6 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5, "get_init_creds_password", rkrb5_get_init_creds_passwd, 2);
   rb_define_method(cKrb5, "change_password", rkrb5_change_password, 2);
   rb_define_method(cKrb5, "close", rkrb5_close, 0);
+
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.0"));
 }
