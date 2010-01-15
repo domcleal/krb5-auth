@@ -5,8 +5,8 @@ require 'rbconfig'
 desc 'Clean any build files'
 task :clean do
   Dir.chdir('ext') do
-    sh 'make distclean' rescue nil
     rm_rf 'conftest.dSYM' if File.exists?('conftest.dSYM')
+    sh 'make distclean' rescue nil
   end
 end
 
@@ -33,6 +33,7 @@ namespace :gem do
 end
 
 Rake::TestTask.new('test') do |t|
+  task :test => :build
   t.libs << 'ext' 
   t.warning = true
   t.verbose = true
