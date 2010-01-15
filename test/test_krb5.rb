@@ -46,8 +46,19 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_respond_to(@krb5, :change_password)
   end
 
-  test "change_password fails if there is no context" do
-    notify("Oops, this segfaults at the moment. Needs fixing.")
+  test "change_password requires two arguments" do
+    assert_raise(ArgumentError){ @krb5.change_password }
+    assert_raise(ArgumentError){ @krb5.change_password('XXXXXXXX') }
+  end
+
+  test "change_password requires two strings" do
+    assert_raise(TypeError){ @krb5.change_password(1, 'XXXXXXXX') }
+    assert_raise(TypeError){ @krb5.change_password('XXXXXXXX', 1) }
+  end
+
+  test "change_password fails if there is no context or principal" do
+    assert_raise(Krb5Auth::Krb5::Exception){ @krb5.change_password("XXX", "YYY") }
+    assert_raise_message('no principal has been established'){ @krb5.change_password("XXX", "YYY") }
   end
 
   def teardown

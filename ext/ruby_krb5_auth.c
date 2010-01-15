@@ -74,6 +74,12 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established"); 
+
+  if(!ptr->princ)
+    rb_raise(cKrb5Exception, "no principal has been established"); 
+
   errno = krb5_get_init_creds_password(
     ptr->ctx,
     &ptr->creds,
