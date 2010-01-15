@@ -1,25 +1,25 @@
 require 'rubygems'
 
-spec = Gem::Specification.new do |gem|
-  gem.name       = 'krb5-auth'
-  gem.version    = '0.7.1'
-  gem.author     = 'Daniel Berger'
-  gem.license    = 'Artistic 2.0'
-  gem.email      = 'djberg96@gmail.com'
-  gem.homepage   = 'http://github.com/djberg96/krb5-auth'
-  gem.platform   = Gem::Platform::RUBY
-  gem.summary    = 'A Ruby interface for the the Kerberos library'
-  gem.has_rdoc   = true
-  gem.test_files = Dir['test/test*']
-  gem.extensions = ['ext/extconf.rb']
-  gem.files      = Dir['**/*'].reject{ |f| f.include?('git') }
+Gem::Specification.new do |spec|
+  spec.name       = 'krb5-auth'
+  spec.version    = '0.8.0'
+  spec.author     = 'Daniel Berger'
+  spec.license    = 'Artistic 2.0'
+  spec.email      = 'djberg96@gmail.com'
+  spec.homepage   = 'http://github.com/djberg96/krb5-auth'
+  spec.platform   = Gem::Platform::RUBY
+  spec.summary    = 'A Ruby interface for the the Kerberos library'
+  spec.has_rdoc   = true
+  spec.test_files = Dir['test/test*']
+  spec.extensions = ['ext/extconf.rb']
+  spec.files      = Dir['**/*'].reject{ |f| f.include?('git') }
   
-  gem.rubyforge_project = 'krb5-auth'
-  gem.extra_rdoc_files = ['README', 'CHANGES', 'MANIFEST', 'ext/rkerberos.c']
+  spec.rubyforge_project = 'krb5-auth'
+  spec.extra_rdoc_files = ['README', 'CHANGES', 'MANIFEST', 'ext/ruby_krb5_auth.c']
   
-  gem.add_development_dependency('test-unit', '>= 2.0.6')
+  spec.add_development_dependency('test-unit', '>= 2.0.6')
    
-  gem.description = <<-EOF
+  spec.description = <<-EOF
     The krb5-auth library is an interface for the Kerberos 5 network
     authentication protocol. It wraps the Kerberos C API.
   EOF
