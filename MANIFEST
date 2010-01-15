@@ -1,0 +1,7 @@
+CHANGES
+krb5-auth.gemspec
+Rakefile
+README
+ext/extconf.rb
+ext/krb5_auth.c
+test/test_krb5.rb
