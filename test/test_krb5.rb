@@ -6,10 +6,18 @@
 require 'rubygems'
 gem 'test-unit'
 
+require 'open3'
 require 'test/unit'
 require 'krb5_auth'
 
 class TC_Krb5 < Test::Unit::TestCase
+  def self.startup
+    @@cache_found = true
+    Open3.popen3('klist') do |stdin, stdout, stderr|
+      @@cache_found = false unless stderr.gets.nil?
+    end
+  end
+
   def setup
     @krb5 = Krb5Auth::Krb5.new
   end
@@ -61,7 +69,27 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_raise_message('no principal has been established'){ @krb5.change_password("XXX", "YYY") }
   end
 
+  test "get_default_principal basic functionality" do
+    assert_respond_to(@krb5, :get_default_principal)
+  end
+
+  test "get_default_principal returns a string if cache found" do
+    omit_unless(@@cache_found, "No credentials cache found, skipping")
+    assert_nothing_raised{ @krb5.get_default_principal }
+    assert_kind_of(String, @krb5.get_default_principal)
+  end
+
+  test "get_default_principal raises an error if no cache is found" do
+    omit_if(@@cache_found, "Credential cache found, skipping")
+    assert_raise(Krb5Auth::Krb5::Exception){ @krb5.get_default_principal }
+  end
+
   def teardown
     @krb5.close
+    @krb5 = nil
+  end
+
+  def self.shutdown
+    @@cache_found = nil
   end
 end

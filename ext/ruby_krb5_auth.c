@@ -148,6 +148,36 @@ static VALUE rkrb5_close(VALUE self){
   return self;
 }
 
+static VALUE rkrb5_get_default_principal(VALUE self){
+  char* princ_name;
+  RUBY_KRB5* ptr;
+  krb5_ccache ccache;  
+
+  Data_Get_Struct(self, RUBY_KRB5, ptr); 
+
+  // Get the default credentials cache
+  errno = krb5_cc_default(ptr->ctx, &ccache);
+
+  if(errno)
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
+
+  errno = krb5_cc_get_principal(ptr->ctx, ccache, &ptr->princ);
+
+  if(errno){
+    krb5_cc_close(ptr->ctx, ccache);
+    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", error_message(errno));
+  }
+
+  krb5_cc_close(ptr->ctx, ccache);
+
+  errno = krb5_unparse_name(ptr->ctx, ptr->princ, &princ_name);
+
+  if(errno)
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
+
+  return rb_str_new2(princ_name);
+}
+
 void Init_krb5_auth(){
   VALUE mKerberos = rb_define_module("Krb5Auth");
   VALUE cKrb5     = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
@@ -158,6 +188,7 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
   rb_define_method(cKrb5, "get_default_realm", rkrb5_get_default_realm, 0);
   rb_define_method(cKrb5, "get_init_creds_password", rkrb5_get_init_creds_passwd, 2);
+  rb_define_method(cKrb5, "get_default_principal", rkrb5_get_default_principal, 0);
   rb_define_method(cKrb5, "change_password", rkrb5_change_password, 2);
   rb_define_method(cKrb5, "close", rkrb5_close, 0);
 
