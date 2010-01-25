@@ -2,12 +2,13 @@ require 'rake'
 require 'rake/testtask'
 require 'rbconfig'
 
-desc 'Clean any build files'
+desc 'Clean any build files and .gem files'
 task :clean do
   Dir.chdir('ext') do
     rm_rf 'conftest.dSYM' if File.exists?('conftest.dSYM')
     sh 'make distclean' rescue nil
   end
+  Dir['*.gem'].each{ |f| File.delete(f) }
 end
 
 desc 'Build the library'
