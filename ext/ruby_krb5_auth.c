@@ -412,7 +412,7 @@ void Init_krb5_auth(){
 
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
+#endif
 
   rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.0"));
-#endif
 }
