@@ -34,9 +34,27 @@ namespace :gem do
   end
 end
 
-Rake::TestTask.new('test') do |t|
-  task :test => :build
-  t.libs << 'ext' 
-  t.warning = true
-  t.verbose = true
+namespace 'test' do
+  Rake::TestTask.new('all') do |t|
+    task :all => :build
+    t.libs << 'ext' 
+    t.warning = true
+    t.verbose = true
+  end
+
+  Rake::TestTask.new('krb5') do |t|
+    task :krb5 => :build
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_krb5.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
+  Rake::TestTask.new('kadm5') do |t|
+    task :kadm5 => :build
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_kadm5.rb']
+    t.warning = true
+    t.verbose = true
+  end
 end
