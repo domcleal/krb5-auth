@@ -1,5 +1,6 @@
 require 'rake'
 require 'rake/testtask'
+require 'rake/clean'
 require 'rbconfig'
 
 desc 'Clean any build files and .gem files'
