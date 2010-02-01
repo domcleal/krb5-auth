@@ -63,6 +63,13 @@ static VALUE rkadm5_allocate(VALUE klass){
   return Data_Wrap_Struct(klass, 0, rkadm5_free, ptr);
 }
 
+/*
+ * call-seq:
+ *   Krb5Auth::Krb5.new
+ *
+ * Creates and returns a new Krb5Auth::Krb5 object. This initializes the
+ * context for future method calls on that object.
+ */
 static VALUE rkrb5_initialize(VALUE self){
   RUBY_KRB5* ptr;
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
@@ -75,6 +82,12 @@ static VALUE rkrb5_initialize(VALUE self){
   return self;
 }
 
+/*
+ * call-seq:
+ *   krb.get_default_realm # => 'YOUR.REALM.COM'
+ *
+ * Returns the default Kerberos realm on your system.
+ */
 static VALUE rkrb5_get_default_realm(VALUE self){
   RUBY_KRB5* ptr;
   char* realm;
@@ -89,6 +102,21 @@ static VALUE rkrb5_get_default_realm(VALUE self){
   return rb_str_new2(realm);
 }
 
+/* call-seq:
+ *   krb5.change_password(old, new)
+ *
+ * Changes the password for the principal from +old+ to +new+. The principal
+ * is defined as whoever the last principal was authenticated via the
+ * Krb5#get_init_creds_password method.
+ *
+ * Attempting to change a password before a principal has been established
+ * will raise an error.
+ *
+ * Example:
+ *
+ * krb5.get_init_creds_password('foo', 'XXXXXX') # Authenticate 'foo' user
+ * krb5.change_password('XXXXXX', 'YYYYYY')      # Change password for 'foo'
+ */
 static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   Check_Type(v_old, T_STRING);
   Check_Type(v_new, T_STRING);
@@ -139,6 +167,14 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   return Qtrue;
 }
 
+/*
+ * call-seq:
+ *   krb5.get_init_creds_password(user, password)
+ *
+ * Authenticates the credentials of +user+ using +password+, and has the effect
+ * of setting the principal and context internally. This method must typically
+ * be called before using other methods.
+ */
 static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass){
   Check_Type(v_user, T_STRING);
   Check_Type(v_pass, T_STRING);
@@ -172,6 +208,13 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
   return Qtrue;
 }
 
+/* 
+ * call-seq:
+ *   krb5.close
+ *
+ * Handles cleanup of the Krb5 object, freeing any credentials, principal or
+ * context associated with the object.
+ */
 static VALUE rkrb5_close(VALUE self){
   RUBY_KRB5* ptr;
 
@@ -192,6 +235,15 @@ static VALUE rkrb5_close(VALUE self){
   return Qtrue;
 }
 
+/*
+ * call-seq:
+ *   krb5.get_default_principal
+ *
+ * Returns the default principal for the current realm based on the current
+ * credentials cache.
+ *
+ * If no credentials cache is found then an error is raised.
+ */
 static VALUE rkrb5_get_default_principal(VALUE self){
   char* princ_name;
   RUBY_KRB5* ptr;
@@ -320,6 +372,9 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5, "get_default_principal", rkrb5_get_default_principal, 0);
   rb_define_method(cKrb5, "change_password", rkrb5_change_password, 2);
   rb_define_method(cKrb5, "close", rkrb5_close, 0);
+
+  rb_define_alias(cKrb5, "default_realm", "get_default_realm");
+  rb_define_alias(cKrb5, "default_principal", "get_default_principal");
 
 #ifdef HAVE_KADM5_ADMIN_H
   VALUE cKadm5    = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
