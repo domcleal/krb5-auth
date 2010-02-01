@@ -9,6 +9,7 @@
 
 VALUE cKrb5Exception;
 VALUE cKadm5Exception;
+VALUE sPrincipalStruct;
 
 typedef struct {
   krb5_context ctx;
@@ -382,6 +383,64 @@ static VALUE rkadm5_delete_principal(VALUE self, VALUE v_user){
   return self;
 }
 
+static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
+  RUBY_KADM5* ptr;
+  VALUE v_struct;
+  char* user;
+  char* name;
+  int mask;
+  kadm5_principal_ent_rec ent;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+  Check_Type(v_user, T_STRING);
+  user = StringValuePtr(v_user);
+
+  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ);
+
+  if(errno)
+    rb_raise(cKadm5Exception, "%s", strerror(errno));
+
+  mask = KADM5_PRINCIPAL_NORMAL_MASK;
+
+  errno = kadm5_get_principal(
+    ptr->handle,
+    ptr->princ,
+    &ent,
+    mask
+  );
+
+  if(errno)
+    rb_raise(cKadm5Exception, "%s", strerror(errno));
+
+  errno = krb5_unparse_name(ptr->ctx, ent.mod_name, &name);
+
+  if(errno)
+    rb_raise(cKadm5Exception, "%s", strerror(errno));
+
+  v_struct = rb_struct_new(
+    sPrincipalStruct,
+    v_user,
+    ent.princ_expire_time ? rb_time_new(ent.princ_expire_time, 0) : Qnil,
+    ent.last_pwd_change ? rb_time_new(ent.last_pwd_change, 0) : Qnil,
+    ent.pw_expiration ? rb_time_new(ent.pw_expiration, 0) : Qnil,
+    LONG2FIX(ent.max_life),
+    rb_str_new2(name),
+    ent.mod_date ? rb_time_new(ent.mod_date, 0) : Qnil,
+    LONG2FIX(ent.attributes),
+    INT2FIX(ent.kvno),
+    ent.policy ? rb_str_new2(ent.policy) : Qnil,
+    INT2FIX(ent.aux_attributes),
+    LONG2FIX(ent.max_renewable_life),
+    ent.last_success ? rb_time_new(ent.last_success, 0) : Qnil,
+    ent.last_failed ? rb_time_new(ent.last_failed, 0) : Qnil,
+    INT2FIX(ent.fail_auth_count)
+  );
+
+  rb_obj_freeze(v_struct); // This is readonly data.
+
+  return v_struct;
+}
+
 #endif
 
 void Init_krb5_auth(){
@@ -412,7 +471,43 @@ void Init_krb5_auth(){
 
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
+  rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
+
+  sPrincipalStruct = rb_struct_define(
+    "Principal",
+    "principal",
+    "princ_expire_time",
+    "last_pwd_change",
+    "pw_expiration",
+    "max_life",
+    "mod_name",
+    "mod_date",
+    "attributes",
+    "kvno",
+    "policy",
+    "aux_attributes",
+    "max_renewable_life",
+    "last_success",
+    "last_failed",
+    "fail_auth_count",
+    NULL
+  );
+
+  rb_define_const(cKadm5, "DISALLOW_POSTDATED", INT2FIX(KRB5_KDB_DISALLOW_POSTDATED));
+  rb_define_const(cKadm5, "DISALLOW_FORWARDABLE", INT2FIX(KRB5_KDB_DISALLOW_FORWARDABLE));
+  rb_define_const(cKadm5, "DISALLOW_TGT_BASED", INT2FIX(KRB5_KDB_DISALLOW_TGT_BASED));
+  rb_define_const(cKadm5, "DISALLOW_RENEWABLE", INT2FIX(KRB5_KDB_DISALLOW_RENEWABLE));
+  rb_define_const(cKadm5, "DISALLOW_PROXIABLE", INT2FIX(KRB5_KDB_DISALLOW_PROXIABLE));
+  rb_define_const(cKadm5, "DISALLOW_DUP_SKEY", INT2FIX(KRB5_KDB_DISALLOW_DUP_SKEY));
+  rb_define_const(cKadm5, "DISALLOW_ALL_TIX", INT2FIX(KRB5_KDB_DISALLOW_ALL_TIX));
+  rb_define_const(cKadm5, "REQUIRES_PRE_AUTH", INT2FIX(KRB5_KDB_REQUIRES_PRE_AUTH));
+  rb_define_const(cKadm5, "REQUIRES_HW_AUTH", INT2FIX(KRB5_KDB_REQUIRES_HW_AUTH));
+  rb_define_const(cKadm5, "REQUIRES_PWCHANGE", INT2FIX(KRB5_KDB_REQUIRES_PWCHANGE));
+  rb_define_const(cKadm5, "DISALLOW_SVR", INT2FIX(KRB5_KDB_DISALLOW_SVR));
+  rb_define_const(cKadm5, "PWCHANGE_SERVICE", INT2FIX(KRB5_KDB_PWCHANGE_SERVICE));
+  rb_define_const(cKadm5, "SUPPORT_DESMD5", INT2FIX(KRB5_KDB_SUPPORT_DESMD5));
+  rb_define_const(cKadm5, "NEW_PRINC", INT2FIX(KRB5_KDB_NEW_PRINC));
 #endif
 
-  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.0"));
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.0a"));
 }

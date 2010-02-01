@@ -16,6 +16,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     @user = @info.user
     @pass = @info.passwd
     @kadm = nil
+    @struct = nil
   end
 
   test "constructor basic functionality" do
@@ -71,11 +72,54 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(ArgumentError){ @kadm.delete_principal(@user, @pass) }
   end
 
+  test "get_principal basic functionality" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
+    assert_respond_to(@kadm, :get_principal)
+  end
+
+  test "get_principal returns a Struct::Principal object" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
+    assert_nothing_raised{ @kadm.create_principal("zztop", "changeme") }
+    assert_nothing_raised{ @struct = @kadm.get_principal("zztop") }
+    assert_kind_of(Struct::Principal, @struct)
+  end
+
+  test "get_principal requires a string argument" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
+    assert_raise(TypeError){ @kadm.get_principal(1) }
+  end
+
+  test "get_principal requires one and only one argument" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
+    assert_raise(ArgumentError){ @kadm.get_principal }
+    assert_raise(ArgumentError){ @kadm.get_principal(@user, @user) }
+  end
+
+  test "principal struct members" do
+    @struct = Struct::Principal.new
+    assert_respond_to(@struct, :principal)
+    assert_respond_to(@struct, :princ_expire_time)
+    assert_respond_to(@struct, :last_pwd_change)
+    assert_respond_to(@struct, :pw_expiration)
+    assert_respond_to(@struct, :max_life)
+    assert_respond_to(@struct, :attributes)
+    assert_respond_to(@struct, :mod_name)
+    assert_respond_to(@struct, :mod_date)
+    assert_respond_to(@struct, :kvno)
+    assert_respond_to(@struct, :policy)
+    assert_respond_to(@struct, :aux_attributes)
+    assert_respond_to(@struct, :max_renewable_life)
+    assert_respond_to(@struct, :last_success)
+    assert_respond_to(@struct, :last_failed)
+    assert_respond_to(@struct, :fail_auth_count)
+  end
+
   def teardown
     @kadm.delete_principal("zztop") rescue nil
-    @info = nil
-    @user = nil
-    @pass = nil
-    @kadm = nil
+    @info   = nil
+    @user   = nil
+    @pass   = nil
+    @kadm   = nil
+    @struct = nil
   end
 end
