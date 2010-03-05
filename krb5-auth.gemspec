@@ -15,12 +15,15 @@ Gem::Specification.new do |spec|
   spec.files      = Dir['**/*'].reject{ |f| f.include?('git') }
   
   spec.rubyforge_project = 'krb5-auth'
-  spec.extra_rdoc_files = ['README', 'CHANGES', 'MANIFEST', 'ext/ruby_krb5_auth.c']
+  spec.extra_rdoc_files  = ['README', 'CHANGES', 'MANIFEST', 'ext/ruby_krb5_auth.c']
   
   spec.add_development_dependency('test-unit', '>= 2.0.6')
    
   spec.description = <<-EOF
     The krb5-auth library is an interface for the Kerberos 5 network
     authentication protocol. It wraps the Kerberos C API.
+
+    This particular version was created by Daniel Berger as a fork of
+    the krb5-auth project.
   EOF
 end
