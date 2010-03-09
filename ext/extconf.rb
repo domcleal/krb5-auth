@@ -1,6 +1,6 @@
 require 'mkmf'
 
-dir_config('krb5_auth', '/usr/local/include')
+dir_config('krb5_auth', '/usr/local')
 
 have_header('krb5.h')
 have_library('krb5')
