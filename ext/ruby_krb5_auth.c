@@ -78,7 +78,7 @@ static VALUE rkrb5_initialize(VALUE self){
   errno = krb5_init_context(&ptr->ctx); 
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_init_context: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(errno));
 
   return self;
 }
@@ -98,7 +98,7 @@ static VALUE rkrb5_get_default_realm(VALUE self){
   errno = krb5_get_default_realm(ptr->ctx, &realm);
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_default_realm: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_get_default_realm: %s", error_message(errno));
 
   return rb_str_new2(realm);
 }
@@ -151,7 +151,7 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   );
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(errno));
 
   errno = krb5_change_password(
     ptr->ctx,
@@ -163,7 +163,7 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   );
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_change_password: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_change_password: %s", error_message(errno));
 
   return Qtrue;
 }
@@ -189,7 +189,7 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_parse_name: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(errno));
 
   errno = krb5_get_init_creds_password(
     ptr->ctx,
@@ -204,7 +204,7 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
   );
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(errno));
 
   return Qtrue;
 }
@@ -256,13 +256,13 @@ static VALUE rkrb5_get_default_principal(VALUE self){
   errno = krb5_cc_default(ptr->ctx, &ccache);
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_cc_default: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
 
   errno = krb5_cc_get_principal(ptr->ctx, ccache, &ptr->princ);
 
   if(errno){
     krb5_cc_close(ptr->ctx, ccache);
-    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", error_message(errno));
   }
 
   krb5_cc_close(ptr->ctx, ccache);
@@ -270,7 +270,7 @@ static VALUE rkrb5_get_default_principal(VALUE self){
   errno = krb5_unparse_name(ptr->ctx, ptr->princ, &princ_name);
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_cc_default: %s", strerror(errno));
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
 
   return rb_str_new2(princ_name);
 }
@@ -301,7 +301,7 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
   errno = krb5_init_context(&ptr->ctx);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   errno = kadm5_init_with_password(
     user,
@@ -315,7 +315,7 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
   );
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   return self;
 }
@@ -345,12 +345,12 @@ static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
   errno = krb5_parse_name(ptr->ctx, user, &princ.principal);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   errno = kadm5_create_principal(ptr->handle, &princ, mask, pass); 
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   krb5_free_principal(ptr->ctx, princ.principal);
 
@@ -373,12 +373,12 @@ static VALUE rkadm5_delete_principal(VALUE self, VALUE v_user){
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   errno = kadm5_delete_principal(ptr->handle, ptr->princ);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   return self;
 }
@@ -398,7 +398,7 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   mask = KADM5_PRINCIPAL_NORMAL_MASK;
 
@@ -410,12 +410,12 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   );
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   errno = krb5_unparse_name(ptr->ctx, ent.mod_name, &name);
 
   if(errno)
-    rb_raise(cKadm5Exception, "%s", strerror(errno));
+    rb_raise(cKadm5Exception, "%s", error_message(errno));
 
   v_struct = rb_struct_new(
     sPrincipalStruct,
