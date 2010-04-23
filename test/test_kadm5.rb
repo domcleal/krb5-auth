@@ -11,10 +11,14 @@ require 'dbi/dbrc'
 require 'krb5_auth'
 
 class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
+  def self.startup
+    @@info = DBI::DBRC.new('test-kerberos')
+    ENV['KRB5_CONFIG'] = @@info.driver
+  end
+
   def setup
-    @info = DBI::DBRC.new('kerberos')
-    @user = @info.user
-    @pass = @info.passwd
+    @user = @@info.user
+    @pass = @@info.passwd
     @kadm = nil
     @struct = nil
   end
@@ -32,8 +36,26 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(Krb5Auth::Kadm5::Exception){ Krb5Auth::Kadm5.new('bogus', @pass) }
   end
 
+  test "set_password basic functionality" do
+    @kadm5 = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_respond_to(@kadm5, :set_password)
+  end
+
+  test "set_password requires two arguments" do
+    @kadm5 = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_raise(ArgumentError){ @kadm5.set_password }
+    assert_raise(ArgumentError){ @kadm5.set_password('user') }
+    assert_raise(ArgumentError){ @kadm5.set_password('user', 'xxx', 'yyy') }
+  end
+
+  test "set_password requires string arguments" do
+    @kadm5 = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_raise(TypeError){ @kadm5.set_password('user',2) }
+    assert_raise(TypeError){ @kadm5.set_password(1, 'xxxx') }
+  end
+
   test "create_principal basic functionality" do
-    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
     assert_respond_to(@kadm, :create_principal)
   end
 
@@ -116,10 +138,13 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   def teardown
     @kadm.delete_principal("zztop") rescue nil
-    @info   = nil
     @user   = nil
     @pass   = nil
     @kadm   = nil
     @struct = nil
+  end
+
+  def self.shutdown
+    @@info = nil
   end
 end
