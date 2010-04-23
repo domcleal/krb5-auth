@@ -186,6 +186,12 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
+
+  if(!ptr->princ)
+    rb_raise(cKrb5Exception, "no principal has been established");
+
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
   if(errno)
@@ -251,6 +257,9 @@ static VALUE rkrb5_get_default_principal(VALUE self){
   krb5_ccache ccache;  
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
+
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
 
   // Get the default credentials cache
   errno = krb5_cc_default(ptr->ctx, &ccache);
