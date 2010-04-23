@@ -189,9 +189,6 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
   if(!ptr->ctx)
     rb_raise(cKrb5Exception, "no context has been established");
 
-  if(!ptr->princ)
-    rb_raise(cKrb5Exception, "no principal has been established");
-
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
   if(errno)
@@ -325,6 +322,37 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
 
   if(errno)
     rb_raise(cKadm5Exception, "%s", error_message(errno));
+
+  return self;
+}
+
+/* call-seq:
+ *   kadm5.set_password(user, password)
+ *
+ * Set the password for +user+ (i.e. the principal) to +password+.
+ */
+static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
+  Check_Type(v_user, T_STRING);
+  Check_Type(v_pass, T_STRING);
+
+  RUBY_KADM5* ptr;
+  char* user = StringValuePtr(v_user);
+  char* pass = StringValuePtr(v_pass);
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
+
+  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
+
+  if(errno)
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(errno));
+
+  errno = kadm5_chpass_principal(ptr->handle, ptr->princ, pass);
+
+  if(errno)
+    rb_raise(cKrb5Exception, "kadm5_chpass_principal: %s", error_message(errno));
 
   return self;
 }
@@ -481,6 +509,7 @@ void Init_krb5_auth(){
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
+  rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
   sPrincipalStruct = rb_struct_define(
     "Principal",
@@ -518,5 +547,5 @@ void Init_krb5_auth(){
   rb_define_const(cKadm5, "NEW_PRINC", INT2FIX(KRB5_KDB_NEW_PRINC));
 #endif
 
-  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.0"));
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.1"));
 }
