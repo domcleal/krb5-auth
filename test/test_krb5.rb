@@ -23,7 +23,7 @@ class TC_Krb5 < Test::Unit::TestCase
   end
 
   test "version constant" do
-    assert_equal('0.8.0', Krb5Auth::Krb5::VERSION)
+    assert_equal('0.8.1', Krb5Auth::Krb5::VERSION)
   end
 
   test "get_default_realm basic functionality" do
