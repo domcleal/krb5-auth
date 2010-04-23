@@ -50,6 +50,16 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_raise(TypeError){ @krb5.get_init_creds_password('test', 1) }
   end
 
+  test "calling get_init_creds_password after closing the object raises an error" do
+    @krb5.close
+    assert_raise(Krb5Auth::Krb5::Exception){ @krb5.get_init_creds_password('foo', 'xxx') }
+  end
+
+  test "calling get_init_creds_password after closing the object raises a specific error message" do
+    @krb5.close
+    assert_raise_message('no context has been established'){ @krb5.get_init_creds_password('foo', 'xxx') }
+  end
+
   test "change_password basic functionality" do
     assert_respond_to(@krb5, :change_password)
   end
