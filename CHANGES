@@ -1,4 +1,8 @@
-= 0.8.0 - ???
+= 0.8.1 - ???
+* Added the set_password method.
+* Added some additional context pointer checking to avoid potential segfaults.
+
+= 0.8.0 - Never released
 * Trimmed and altered original original code.
 * Several other files changed.
 * NOT FOR GENERAL CONSUMPTION AT THIS TIME!

@@ -2,7 +2,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name       = 'krb5-auth'
-  spec.version    = '0.8.0'
+  spec.version    = '0.8.1'
   spec.author     = 'Daniel Berger'
   spec.license    = 'Artistic 2.0'
   spec.email      = 'djberg96@gmail.com'
@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.extra_rdoc_files  = ['README', 'CHANGES', 'MANIFEST', 'ext/ruby_krb5_auth.c']
   
   spec.add_development_dependency('test-unit', '>= 2.0.6')
+  spec.add_development_dependency('dbi-dbrc', '>= 1.1.6')
    
   spec.description = <<-EOF
     The krb5-auth library is an interface for the Kerberos 5 network
