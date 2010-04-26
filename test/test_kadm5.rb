@@ -54,6 +54,11 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(TypeError){ @kadm5.set_password(1, 'xxxx') }
   end
 
+  test "attempting to set the password for an invalid user raises an error" do
+    @kadm5 = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm5.set_password('bogususer', 'xxxyyy') }
+  end
+
   test "create_principal basic functionality" do
     @kadm = Krb5Auth::Kadm5.new(@user, @pass)
     assert_respond_to(@kadm, :create_principal)

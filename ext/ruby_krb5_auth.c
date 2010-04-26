@@ -342,17 +342,17 @@ static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
   Data_Get_Struct(self, RUBY_KADM5, ptr);
 
   if(!ptr->ctx)
-    rb_raise(cKrb5Exception, "no context has been established");
+    rb_raise(cKadm5Exception, "no context has been established");
 
   errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
   if(errno)
-    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(errno));
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(errno));
 
   errno = kadm5_chpass_principal(ptr->handle, ptr->princ, pass);
 
   if(errno)
-    rb_raise(cKrb5Exception, "kadm5_chpass_principal: %s", error_message(errno));
+    rb_raise(cKadm5Exception, "kadm5_chpass_principal: %s", error_message(errno));
 
   return self;
 }
