@@ -23,9 +23,11 @@ end
 
 desc 'Create a tarball of the source'
 task :archive do
+  spec = eval(IO.read('krb5-auth.gemspec'))
+  prefix = "krb5-auth-#{spec.version}/"
   Dir['*.tar*'].each{ |f| File.delete(f) }
-  sh "git archive --format=tar HEAD > krb5-auth.tar"
-  sh "gzip krb5-auth.tar"
+  sh "git archive --prefix=#{prefix} --format=tar HEAD > krb5-auth-#{spec.version}.tar"
+  sh "gzip krb5-auth-#{spec.version}.tar"
 end
 
 namespace :gem do
