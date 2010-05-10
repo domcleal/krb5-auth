@@ -1,7 +1,6 @@
 #include <ruby.h>
 #include <krb5.h>
 #include <string.h>
-#include <errno.h>
 
 #ifdef HAVE_KADM5_ADMIN_H
 #include <kadm5/admin.h>
@@ -74,11 +73,12 @@ static VALUE rkadm5_allocate(VALUE klass){
 static VALUE rkrb5_initialize(VALUE self){
   RUBY_KRB5* ptr;
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
+  krb5_error_code kerror;
 
-  errno = krb5_init_context(&ptr->ctx); 
+  kerror = krb5_init_context(&ptr->ctx); 
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
   return self;
 }
@@ -92,13 +92,14 @@ static VALUE rkrb5_initialize(VALUE self){
 static VALUE rkrb5_get_default_realm(VALUE self){
   RUBY_KRB5* ptr;
   char* realm;
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
-  errno = krb5_get_default_realm(ptr->ctx, &realm);
+  kerror = krb5_get_default_realm(ptr->ctx, &realm);
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_default_realm: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_get_default_realm: %s", error_message(kerror));
 
   return rb_str_new2(realm);
 }
@@ -125,6 +126,7 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   RUBY_KRB5* ptr;
   krb5_data result_string;
   krb5_data pw_result_string;
+  krb5_error_code kerror;
 
   int pw_result;
   char* old_passwd = StringValuePtr(v_old);
@@ -138,7 +140,7 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
   if(!ptr->princ)
     rb_raise(cKrb5Exception, "no principal has been established"); 
 
-  errno = krb5_get_init_creds_password(
+  kerror = krb5_get_init_creds_password(
     ptr->ctx,
     &ptr->creds,
     ptr->princ,
@@ -150,10 +152,10 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
     NULL
   );
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(kerror));
 
-  errno = krb5_change_password(
+  kerror = krb5_change_password(
     ptr->ctx,
     &ptr->creds,
     new_passwd,
@@ -162,8 +164,8 @@ static VALUE rkrb5_change_password(VALUE self, VALUE v_old, VALUE v_new){
     &result_string
   );
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_change_password: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_change_password: %s", error_message(kerror));
 
   return Qtrue;
 }
@@ -183,18 +185,19 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
   RUBY_KRB5* ptr;
   char* user = StringValuePtr(v_user);
   char* pass = StringValuePtr(v_pass);
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
   if(!ptr->ctx)
     rb_raise(cKrb5Exception, "no context has been established");
 
-  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
+  kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
 
-  errno = krb5_get_init_creds_password(
+  kerror = krb5_get_init_creds_password(
     ptr->ctx,
     &ptr->creds,
     ptr->princ,
@@ -206,8 +209,8 @@ static VALUE rkrb5_get_init_creds_passwd(VALUE self, VALUE v_user, VALUE v_pass)
     NULL
   );
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_get_init_creds_password: %s", error_message(kerror));
 
   return Qtrue;
 }
@@ -252,6 +255,7 @@ static VALUE rkrb5_get_default_principal(VALUE self){
   char* princ_name;
   RUBY_KRB5* ptr;
   krb5_ccache ccache;  
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
@@ -259,24 +263,24 @@ static VALUE rkrb5_get_default_principal(VALUE self){
     rb_raise(cKrb5Exception, "no context has been established");
 
   // Get the default credentials cache
-  errno = krb5_cc_default(ptr->ctx, &ccache);
+  kerror = krb5_cc_default(ptr->ctx, &ccache);
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(kerror));
 
-  errno = krb5_cc_get_principal(ptr->ctx, ccache, &ptr->princ);
+  kerror = krb5_cc_get_principal(ptr->ctx, ccache, &ptr->princ);
 
-  if(errno){
+  if(kerror){
     krb5_cc_close(ptr->ctx, ccache);
-    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", error_message(errno));
+    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", error_message(kerror));
   }
 
   krb5_cc_close(ptr->ctx, ccache);
 
-  errno = krb5_unparse_name(ptr->ctx, ptr->princ, &princ_name);
+  kerror = krb5_unparse_name(ptr->ctx, ptr->princ, &princ_name);
 
-  if(errno)
-    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_cc_default: %s", error_message(kerror));
 
   return rb_str_new2(princ_name);
 }
@@ -295,6 +299,7 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
   RUBY_KADM5* ptr;
   char* user;
   char* pass;
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
 
@@ -304,12 +309,12 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
   user = StringValuePtr(v_user);
   pass = StringValuePtr(v_pass);
 
-  errno = krb5_init_context(&ptr->ctx);
+  kerror = krb5_init_context(&ptr->ctx);
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_init_context: %s", error_message(kerror));
 
-  errno = kadm5_init_with_password(
+  kerror = kadm5_init_with_password(
     user,
     pass,
     KADM5_ADMIN_SERVICE,
@@ -320,8 +325,8 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
     &ptr->handle
   );
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_init_with_password: %s", error_message(kerror));
 
   return self;
 }
@@ -338,21 +343,22 @@ static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
   RUBY_KADM5* ptr;
   char* user = StringValuePtr(v_user);
   char* pass = StringValuePtr(v_pass);
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
 
   if(!ptr->ctx)
     rb_raise(cKadm5Exception, "no context has been established");
 
-  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
+  kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
-  if(errno)
-    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(kerror));
 
-  errno = kadm5_chpass_principal(ptr->handle, ptr->princ, pass);
+  kerror = kadm5_chpass_principal(ptr->handle, ptr->princ, pass);
 
-  if(errno)
-    rb_raise(cKadm5Exception, "kadm5_chpass_principal: %s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_chpass_principal: %s", error_message(kerror));
 
   return self;
 }
@@ -369,6 +375,7 @@ static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
   char* pass;
   int mask;
   kadm5_principal_ent_rec princ;
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
 
@@ -379,15 +386,18 @@ static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
   user = StringValuePtr(v_user);
   pass = StringValuePtr(v_pass);
 
-  errno = krb5_parse_name(ptr->ctx, user, &princ.principal);
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  kerror = krb5_parse_name(ptr->ctx, user, &princ.principal);
 
-  errno = kadm5_create_principal(ptr->handle, &princ, mask, pass); 
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(kerror));
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  kerror = kadm5_create_principal(ptr->handle, &princ, mask, pass); 
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_create_principal: %s", error_message(kerror));
 
   krb5_free_principal(ptr->ctx, princ.principal);
 
@@ -402,24 +412,63 @@ static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
 static VALUE rkadm5_delete_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
   char* user;
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
   Check_Type(v_user, T_STRING);
   user = StringValuePtr(v_user);
 
-  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ);
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ);
 
-  errno = kadm5_delete_principal(ptr->handle, ptr->princ);
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(kerror));
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  kerror = kadm5_delete_principal(ptr->handle, ptr->princ);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_delete_principal: %s", error_message(kerror));
 
   return self;
 }
 
+/*
+ * call-seq:
+ *   kadm5.close
+ *
+ * Closes the kadm5 object. Specifically, it frees the principal and context
+ * associated with the kadm5 object, as well as the server handle.
+ *
+ * Any attempt to call a method on a kadm5 object after it has been closed
+ * will fail with an error message indicating a lack of context.
+ */
+static VALUE rkadm5_close(VALUE self){
+  RUBY_KADM5* ptr;
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  if(ptr->princ)
+    krb5_free_principal(ptr->ctx, ptr->princ);
+
+  if(ptr->ctx)
+    krb5_free_context(ptr->ctx);
+
+  ptr->ctx    = NULL;
+  ptr->princ  = NULL;
+  ptr->handle = NULL;
+
+  return self;
+}
+
+/*
+ * call-seq:
+ *   kadm5.get_principal(principal_name)
+ *
+ * Returns a Struct::Principal object for +principal_name+ containing various
+ * bits of information regarding that principal, such as policy, attributes,
+ * expiration information, etc.
+ */
 static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
   VALUE v_struct;
@@ -427,32 +476,36 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   char* name;
   int mask;
   kadm5_principal_ent_rec ent;
+  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
   Check_Type(v_user, T_STRING);
   user = StringValuePtr(v_user);
 
-  errno = krb5_parse_name(ptr->ctx, user, &ptr->princ);
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(kerror));
 
   mask = KADM5_PRINCIPAL_NORMAL_MASK;
 
-  errno = kadm5_get_principal(
+  kerror = kadm5_get_principal(
     ptr->handle,
     ptr->princ,
     &ent,
     mask
   );
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_get_principal: %s", error_message(kerror));
 
-  errno = krb5_unparse_name(ptr->ctx, ent.mod_name, &name);
+  kerror = krb5_unparse_name(ptr->ctx, ent.mod_name, &name);
 
-  if(errno)
-    rb_raise(cKadm5Exception, "%s", error_message(errno));
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_unparse_name: %s", error_message(kerror));
 
   v_struct = rb_struct_new(
     sPrincipalStruct,
@@ -506,6 +559,7 @@ void Init_krb5_auth(){
   rb_define_alloc_func(cKadm5, rkadm5_allocate);
   rb_define_method(cKadm5, "initialize", rkadm5_initialize, 2);
 
+  rb_define_method(cKadm5, "close", rkadm5_close, 0);
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
