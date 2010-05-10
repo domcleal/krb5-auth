@@ -484,6 +484,8 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   Check_Type(v_user, T_STRING);
   user = StringValuePtr(v_user);
 
+  memset(&ent, 0, sizeof(ent));
+
   if(!ptr->ctx)
     rb_raise(cKadm5Exception, "no context has been established");
 
