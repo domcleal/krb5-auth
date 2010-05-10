@@ -37,6 +37,11 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(Krb5Auth::Kadm5::Exception){ Krb5Auth::Kadm5.new('bogus', @pass) }
   end
 
+  test "constructor with invalid user or password raises a specific error message" do
+    assert_raise_message('kadm5_init_with_password: Incorrect password'){ Krb5Auth::Kadm5.new(@user, 'bogus') }
+    assert_raise_message('kadm5_init_with_password: Client not found in Kerberos database'){ Krb5Auth::Kadm5.new('bogus', @pass) }
+  end
+
   test "set_password basic functionality" do
     @kadm5 = Krb5Auth::Kadm5.new(@user, @pass)
     assert_respond_to(@kadm5, :set_password)
