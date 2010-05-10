@@ -21,6 +21,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     @pass = @@info.passwd
     @kadm = nil
     @struct = nil
+    @test_princ = "zztop"
   end
 
   test "constructor basic functionality" do
@@ -28,7 +29,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   end
 
   test "constructor with valid user and password works as expected" do
-    assert_nothing_raised{ Krb5Auth::Kadm5.new(@user, @pass) }
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
   end
 
   test "constructor with invalid user or password raises an error" do
@@ -66,7 +67,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   test "create_principal creates a user as expected" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
-    assert_nothing_raised{ @kadm.create_principal("zztop", "changeme") }
+    assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
   end
 
   test "create_principal requires two arguments" do
@@ -78,8 +79,8 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   test "attempting to create a principal that already exists raises an error" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
-    assert_nothing_raised{ @kadm.create_principal("zztop", "changeme") }
-    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.create_principal("zztop", "changeme") }
+    assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.create_principal(@test_princ, "changeme") }
   end
 
   test "delete_principal basic functionality" do
@@ -89,8 +90,8 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   test "delete_principal works as expected" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
-    assert_nothing_raised{ @kadm.create_principal("zztop", "changeme") }
-    assert_nothing_raised{ @kadm.delete_principal("zztop") }
+    assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
+    assert_nothing_raised{ @kadm.delete_principal(@test_princ) }
   end
 
   test "delete_principal takes one argument and only one argument" do
@@ -104,11 +105,16 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_respond_to(@kadm, :get_principal)
   end
 
-  test "get_principal returns a Struct::Principal object" do
+  test "get_principal returns a Struct::Principal object if found" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(@user, @pass) }
-    assert_nothing_raised{ @kadm.create_principal("zztop", "changeme") }
-    assert_nothing_raised{ @struct = @kadm.get_principal("zztop") }
+    assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
+    assert_nothing_raised{ @struct = @kadm.get_principal(@test_princ) }
     assert_kind_of(Struct::Principal, @struct)
+  end
+
+  test "get_principal raises an error if not found" do
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.get_principal('bogus') }
   end
 
   test "get_principal requires a string argument" do
@@ -141,8 +147,38 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_respond_to(@struct, :fail_auth_count)
   end
 
+  test "close basic functionality" do
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_respond_to(@kadm, :close)
+    assert_nothing_raised{ @kadm.close }
+  end
+
+  test "calling close multiple times is a no-op" do
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_nothing_raised{ @kadm.close }
+    assert_nothing_raised{ @kadm.close }
+    assert_nothing_raised{ @kadm.close }
+  end
+
+  test "close does not accept any arguments" do
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
+    assert_raise(ArgumentError){ @kadm.close(1) }
+  end
+
+  test "calling close on an already closed object raises an error" do
+    @kadm = Krb5Auth::Kadm5.new(@user, @pass)
+    @kadm.create_principal(@test_princ, "changeme")
+    @kadm.close
+
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.get_principal(@test_princ) }
+    assert_raise_message('no context has been established'){ @kadm.get_principal(@test_princ) }
+  end
+
   def teardown
-    @kadm.delete_principal("zztop") rescue nil
+    if @kadm
+      @kadm.delete_principal(@test_princ) rescue nil
+      @kadm.close
+    end
     @user   = nil
     @pass   = nil
     @kadm   = nil
