@@ -382,6 +382,8 @@ static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
   Check_Type(v_user, T_STRING);
   Check_Type(v_pass, T_STRING);
 
+  memset(&princ, 0, sizeof(princ));
+
   mask = KADM5_PRINCIPAL;
   user = StringValuePtr(v_user);
   pass = StringValuePtr(v_pass);
@@ -601,5 +603,5 @@ void Init_krb5_auth(){
   rb_define_const(cKadm5, "NEW_PRINC", INT2FIX(KRB5_KDB_NEW_PRINC));
 #endif
 
-  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.1"));
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.2"));
 }
