@@ -1,4 +1,16 @@
-= 0.8.1 - ???
+= 0.8.2 - ???
+* Fixed a memory allocation bug in the kadm5.create_principal and
+  kadm5.get_principal methods.
+* Added the kadm5.close method.
+* Made some error messages for the Kadm5 class more informative.
+* Made the extconf.rb more strict. The kadm5clnt library mandatory or
+  the build will fail.
+* Added some documentation to a couple of methods where it was previously
+  missing.
+* Added additional tests for existing methods, including tests for error
+  messages, and new tests for the kadm5.close method.
+
+= 0.8.1 - Never released
 * Added the set_password method.
 * Added some additional context pointer checking to avoid potential segfaults.
 
