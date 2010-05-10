@@ -1,5 +1,6 @@
 CHANGES
 krb5-auth.gemspec
+MANIFEST
 Rakefile
 README
 ext/extconf.rb
