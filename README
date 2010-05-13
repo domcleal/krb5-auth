@@ -2,6 +2,9 @@
   This is Daniel Berger's custom implementation of the original
   krb5-auth library.
 
+= Requirements
+  Kerberos 1.7.0 or later, including admin header and library files.
+
 = Notes
   This is a trimmed down and modified version of the original krb5-auth library.
   It is not (yet) meant yet for general consumption.
