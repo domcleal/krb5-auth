@@ -314,6 +314,19 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
   if(kerror)
     rb_raise(cKadm5Exception, "krb5_init_context: %s", error_message(kerror));
 
+#ifdef KADM5_API_VERSION_3
+  kerror = kadm5_init_with_password(
+    ptr->ctx,
+    user,
+    pass,
+    KADM5_ADMIN_SERVICE,
+    NULL,
+    KADM5_STRUCT_VERSION,
+    KADM5_API_VERSION_3,
+    NULL,
+    &ptr->handle
+  );
+#else
   kerror = kadm5_init_with_password(
     user,
     pass,
@@ -324,6 +337,7 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
     NULL,
     &ptr->handle
   );
+#endif
 
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_init_with_password: %s", error_message(kerror));
