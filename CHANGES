@@ -1,4 +1,9 @@
-= 0.8.2 - ???
+= 0.8.3 - ???
+* Modified the Kadm5.new method to handle Kerberos 1.8.0 or later, which
+  had modified the function prototype for the kadm5_init_with_password()
+  function.
+
+= 0.8.2 - Never released
 * Fixed a memory allocation bug in the kadm5.create_principal and
   kadm5.get_principal methods.
 * Added the kadm5.close method.

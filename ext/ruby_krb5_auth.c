@@ -619,5 +619,5 @@ void Init_krb5_auth(){
   rb_define_const(cKadm5, "NEW_PRINC", INT2FIX(KRB5_KDB_NEW_PRINC));
 #endif
 
-  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.2"));
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.3"));
 }
