@@ -44,7 +44,7 @@ namespace :gem do
   end
 
   desc 'Install the gem'
-  task :install => [:build] do
+  task :install => [:create] do
     file = Dir["*.gem"].first
     sh "gem install #{file}" 
   end
