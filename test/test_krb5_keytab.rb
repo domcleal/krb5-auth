@@ -7,13 +7,11 @@ require 'rubygems'
 gem 'test-unit'
 
 require 'open3'
-require 'sys/admin'
 require 'test/unit'
 require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@user = Sys::Admin.get_user(Sys::Admin.get_login)
     @@file = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
   end
 
@@ -44,14 +42,14 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "each basic functionality" do
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@file) }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_respond_to(@keytab, :each)
     assert_nothing_raised{ @keytab.each{} }
   end
 
   test "each method yields a keytab entry object" do
     array = []
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@file) }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
     assert_true(array.size > 1)
@@ -59,12 +57,12 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
 
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@file){} }
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){} }
   end
 
   test "foreach singleton method yields keytab entry objects" do
     array = []
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@file){ |entry| array << entry } }
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
     assert_true(array.size > 1)
   end
