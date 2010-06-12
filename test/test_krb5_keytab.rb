@@ -7,15 +7,17 @@ require 'rubygems'
 gem 'test-unit'
 
 require 'open3'
+require 'sys/admin'
 require 'test/unit'
 require 'krb5_auth'
 
-# TODO: We need to create a temporary keytab that we can use for
-# testing purposes.
-
 class TC_Krb5_Keytab < Test::Unit::TestCase
+  def self.startup
+    @@user = Sys::Admin.get_user(Sys::Admin.get_login)
+    @@file = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
+  end
+
   def setup
-    @file = "WRFILE:/home/dberger/dberger.keytab"
     @keytab = Krb5Auth::Krb5::Keytab.new
     @name = nil
   end
@@ -68,7 +70,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   def teardown
-    @keytab.close
+    @keytab.close if @keytab
     @keytab = nil
   end
 end
