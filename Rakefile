@@ -87,6 +87,14 @@ namespace 'test' do
     t.verbose = true
   end
 
+  Rake::TestTask.new('keytab') do |t|
+    task :keytab => :build
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_krb5_keytab.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
   Rake::TestTask.new('kadm5') do |t|
     task :kadm5 => :build
     t.libs << 'ext' 
