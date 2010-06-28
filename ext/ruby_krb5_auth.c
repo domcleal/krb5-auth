@@ -18,6 +18,12 @@ typedef struct {
 
 typedef struct {
   krb5_context ctx;
+  krb5_creds creds;
+  krb5_keytab keytab;
+} RUBY_KRB5_KEYTAB;
+
+typedef struct {
+  krb5_context ctx;
   krb5_principal princ;
   void* handle;
 } RUBY_KADM5;
@@ -31,6 +37,16 @@ static void rkrb5_free(RUBY_KRB5* ptr){
 
   if(ptr->princ)
     krb5_free_principal(ptr->ctx, ptr->princ);
+
+  if(ptr->ctx)
+    krb5_free_context(ptr->ctx);
+
+  free(ptr);
+}
+
+static void rkrb5_keytab_free(RUBY_KRB5_KEYTAB* ptr){
+  if(!ptr)
+    return;
 
   if(ptr->ctx)
     krb5_free_context(ptr->ctx);
@@ -57,6 +73,12 @@ static VALUE rkrb5_allocate(VALUE klass){
   return Data_Wrap_Struct(klass, 0, rkrb5_free, ptr);
 }
 
+static VALUE rkrb5_keytab_allocate(VALUE klass){
+  RUBY_KRB5_KEYTAB* ptr = malloc(sizeof(RUBY_KRB5_KEYTAB));
+  memset(ptr, 0, sizeof(RUBY_KRB5_KEYTAB));
+  return Data_Wrap_Struct(klass, 0, rkrb5_keytab_free, ptr);
+}
+
 static VALUE rkadm5_allocate(VALUE klass){
   RUBY_KADM5* ptr = malloc(sizeof(RUBY_KADM5));
   memset(ptr, 0, sizeof(RUBY_KADM5));
@@ -72,8 +94,9 @@ static VALUE rkadm5_allocate(VALUE klass){
  */
 static VALUE rkrb5_initialize(VALUE self){
   RUBY_KRB5* ptr;
-  Data_Get_Struct(self, RUBY_KRB5, ptr); 
   krb5_error_code kerror;
+
+  Data_Get_Struct(self, RUBY_KRB5, ptr); 
 
   kerror = krb5_init_context(&ptr->ctx); 
 
@@ -81,6 +104,59 @@ static VALUE rkrb5_initialize(VALUE self){
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
   return self;
+}
+
+/*
+ * call-seq:
+ *   Krb5Auth::Krb5::Keytab.new(name = nil)
+ *
+ * Creates and returns a new Krb5Auth::Krb5::Keytab object. This initializes
+ * the context and keytab for future method calls on that object.
+ *
+ * A keytab file +name+ may be provided. If not, the system's default keytab
+ * name is used.
+ */
+static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  krb5_error_code kerror;
+  char* keytab_name;
+  VALUE v_keytab_name;
+
+  rb_scan_args(argc, argv, "01", &v_keytab_name);
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  kerror = krb5_init_context(&ptr->ctx); 
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
+
+  return self;
+}
+
+/*
+ * call-seq:
+ *
+ *   keytab.default_name
+ *
+ * Returns the default keytab name.
+ */
+static VALUE rkrb5_keytab_default_name(VALUE self){
+  char default_name[512];
+  krb5_error_code kerror;
+  RUBY_KRB5_KEYTAB* ptr;
+  VALUE v_default_name;
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+  
+  kerror = krb5_kt_default_name(ptr->ctx, default_name, 512);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
+
+  v_default_name = rb_str_new2(default_name);
+
+  return v_default_name;
 }
 
 /*
@@ -103,6 +179,74 @@ static VALUE rkrb5_get_default_realm(VALUE self){
 
   return rb_str_new2(realm);
 }
+
+/* call-seq:
+ *   Krb5Auth::Krb5::Keytab.get_init_creds_keytab(name, service=nil)
+ *
+ */
+/*
+static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  VALUE v_name, v_keytab, v_service;
+  char* service;
+  char* keytab_name;
+
+  krb5_error_code kerror;
+  krb5_get_init_creds_opt opt;
+  krb5_creds cred;
+  krb5_keytab_entry entry;
+  krb5_keytab keytab;
+
+  Data_Get_Struct(self, RUBY_KRB5, ptr); 
+
+  rb_scan_args(argc, argv, "21", &v_name, &v_keytab, &v_service);
+
+  Check_Type(v_name, T_STRING);
+  keytab_name = StringValuePtr(v_name);
+
+  if(NIL_P(v_service)){
+    service = NULL;
+  }
+  else{
+    Check_Type(v_service, T_STRING);
+    service = StringValuePtr(v_service);
+  }
+
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established"); 
+
+  krb5_get_init_creds_opt_init(&opt);
+
+  kerror = krb5_parse_name(ptr->ctx, name, &ptr->princ); 
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
+
+  kerror = krb5_kt_resolve(
+    ptr->ctx,
+    keytab_name,
+    &keytab
+  )
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
+
+  kerror = krb5_get_init_creds_keytab(
+    ptr->ctx,
+    cred,
+    ptr->princ,
+    keytab,
+    0,
+    service,
+    opt
+  );    
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_get_init_creds_keytab: %s", error_message(kerror));
+
+  return self; 
+}
+*/
 
 /* call-seq:
  *   krb5.change_password(old, new)
@@ -238,6 +382,22 @@ static VALUE rkrb5_close(VALUE self){
 
   ptr->ctx = NULL;
   ptr->princ = NULL;
+
+  return Qtrue;
+}
+
+static VALUE rkrb5_keytab_close(VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr);
+
+  if(ptr->ctx)
+    krb5_free_cred_contents(ptr->ctx, &ptr->creds);
+
+  if(ptr->ctx)
+    krb5_free_context(ptr->ctx);
+
+  ptr->ctx = NULL;
 
   return Qtrue;
 }
@@ -552,14 +712,20 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
 #endif
 
 void Init_krb5_auth(){
-  VALUE mKerberos = rb_define_module("Krb5Auth");
-  VALUE cKrb5     = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
-  cKrb5Exception  = rb_define_class_under(cKrb5, "Exception", rb_eStandardError);
+  VALUE mKerberos   = rb_define_module("Krb5Auth");
+  VALUE cKrb5       = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
+  VALUE cKrb5Keytab = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
+  cKrb5Exception    = rb_define_class_under(cKrb5, "Exception", rb_eStandardError);
 
-  // Krb5 methods
+  // Allocation functions
   rb_define_alloc_func(cKrb5, rkrb5_allocate);
-  rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
+  rb_define_alloc_func(cKrb5Keytab, rkrb5_keytab_allocate);
 
+  // Initializers
+  rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
+  rb_define_method(cKrb5Keytab, "initialize", rkrb5_keytab_initialize, -1);
+
+  // Krb5 Methods
   rb_define_method(cKrb5, "get_default_realm", rkrb5_get_default_realm, 0);
   rb_define_method(cKrb5, "get_init_creds_password", rkrb5_get_init_creds_passwd, 2);
   rb_define_method(cKrb5, "get_default_principal", rkrb5_get_default_principal, 0);
@@ -568,6 +734,10 @@ void Init_krb5_auth(){
 
   rb_define_alias(cKrb5, "default_realm", "get_default_realm");
   rb_define_alias(cKrb5, "default_principal", "get_default_principal");
+
+  // Krb5::Keytab Methods
+  rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
+  rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
 
 #ifdef HAVE_KADM5_ADMIN_H
   // Kadm5 methods
