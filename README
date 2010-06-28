@@ -5,6 +5,17 @@
 = Requirements
   Kerberos 1.7.0 or later, including admin header and library files.
 
+= Synopsis
+  require 'krb5_auth'
+
+  krb5 = Krb5Auth::Krb5.new
+  puts krb5.default_realm
+  krb5.close
+
+  keytab = Krb5Auth::Krb5::Keytab.new
+  puts keytab.default_name
+  keytab.close
+
 = Notes
   This is a trimmed down and modified version of the original krb5-auth library.
   It is not (yet) meant yet for general consumption.
