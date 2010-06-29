@@ -114,12 +114,18 @@ static VALUE rkrb5_initialize(VALUE self){
  * the context and keytab for future method calls on that object.
  *
  * A keytab file +name+ may be provided. If not, the system's default keytab
- * name is used.
+ * name is used. If a +name+ is provided it must be in the form 'type:residual'
+ * where 'type' is a type known to the Kerberos library.
+ *
+ * Example:
+ *
+ *   keytab = Krb5Auth::Krb5::Keytab.new
+ *   keytab = Krb5Auth::Krb5::Keytab.new('FILE:/etc/krb5.keytab')
  */
 static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
-  char* keytab_name;
+  char keytab_name[512];
   VALUE v_keytab_name;
 
   rb_scan_args(argc, argv, "01", &v_keytab_name);
@@ -131,6 +137,27 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
+  // Use the default keytab name if one isn't provided.
+  if(NIL_P(v_keytab_name)){
+    kerror = krb5_kt_default_name(ptr->ctx, keytab_name, 512);
+
+    if(kerror)
+      rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
+  } 
+  else{
+    Check_Type(v_keytab_name, T_STRING);
+    strncpy(keytab_name, StringValuePtr(v_keytab_name), 512);
+  }
+
+  kerror = krb5_kt_resolve(
+    ptr->ctx,
+    keytab_name,
+    &ptr->keytab      
+  );
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
+  
   return self;
 }
 

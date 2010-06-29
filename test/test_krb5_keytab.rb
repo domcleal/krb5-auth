@@ -15,6 +15,15 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     @keytab = Krb5Auth::Krb5::Keytab.new
   end
 
+  test "constructor takes an optional name" do
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new("FILE:/usr/local/var/keytab") }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new("FILE:/bogus/keytab") }
+  end
+
+  test "keytab name must be a string" do
+    assert_raise(TypeError){ Krb5Auth::Krb5::Keytab.new(1) }
+  end
+
   test "default_name basic functionality" do
     assert_respond_to(@keytab, :default_name)
     assert_nothing_raised{ @keytab.default_name }
