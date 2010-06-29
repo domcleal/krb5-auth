@@ -10,9 +10,14 @@ require 'open3'
 require 'test/unit'
 require 'krb5_auth'
 
+# TODO: We need to create a temporary keytab that we can use for
+# testing purposes.
+
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def setup
+    @file = "WRFILE:/home/dberger/dberger.keytab"
     @keytab = Krb5Auth::Krb5::Keytab.new
+    @name = nil
   end
 
   test "constructor takes an optional name" do
@@ -34,6 +39,20 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_respond_to(@keytab, :close)
     assert_nothing_raised{ @keytab.close }
     assert_boolean(@keytab.close)
+  end
+
+  test "each basic functionality" do
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@file) }
+    assert_respond_to(@keytab, :each)
+    assert_nothing_raised{ @keytab.each{} }
+  end
+
+  test "next entry yields a name" do
+    array = []
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@file) }
+    assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
+    assert_kind_of(String, array[0])
+    assert_true(array.size > 1)
   end
 
   def teardown

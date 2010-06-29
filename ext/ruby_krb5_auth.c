@@ -48,8 +48,12 @@ static void rkrb5_keytab_free(RUBY_KRB5_KEYTAB* ptr){
   if(!ptr)
     return;
 
+  if(ptr->keytab)
+    krb5_kt_close(ptr->ctx, ptr->keytab);
+
   if(ptr->ctx)
     krb5_free_context(ptr->ctx);
+
 
   free(ptr);
 }
@@ -159,6 +163,55 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
     rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
   
   return self;
+}
+
+/*
+ * call-seq:
+ *
+ *   keytab.each{ |entry| p entry }
+ *
+ * Iterates over each entry, and yield the principal name.
+ *--
+ * TODO: Create a KeytabEntry object, and yield that instead. Also,
+ * possibly mixin enumerable and reimplement this method the Ruby way.
+ */
+static VALUE rkrb5_keytab_each(VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  krb5_error_code kerror;
+  krb5_kt_cursor cursor;
+  krb5_keytab_entry entry;
+  char* principal;
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  kerror = krb5_kt_start_seq_get(
+    ptr->ctx,
+    ptr->keytab,
+    &cursor
+  );
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_start_seq_get: %s", error_message(kerror));
+
+  while((kerror = krb5_kt_next_entry(ptr->ctx, ptr->keytab, &entry, &cursor)) == 0){
+    krb5_unparse_name(ptr->ctx, entry.principal, &principal);
+
+    rb_yield(rb_str_new2(principal));
+    free(principal);
+
+    krb5_kt_free_entry(ptr->ctx, &entry);
+  }
+
+  kerror = krb5_kt_end_seq_get(
+    ptr->ctx,
+    ptr->keytab,
+    &cursor
+  );
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_end_seq_get: %s", error_message(kerror));
+
+  return self; 
 }
 
 /*
@@ -765,6 +818,7 @@ void Init_krb5_auth(){
   // Krb5::Keytab Methods
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
+  rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
 
 #ifdef HAVE_KADM5_ADMIN_H
   // Kadm5 methods
