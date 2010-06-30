@@ -6,6 +6,10 @@
 #include <kadm5/admin.h>
 #endif
 
+VALUE mKerberos;
+VALUE cKrb5;
+VALUE cKrb5Keytab;
+VALUE cKrb5KtEntry;
 VALUE cKrb5Exception;
 VALUE cKadm5Exception;
 VALUE sPrincipalStruct;
@@ -21,6 +25,14 @@ typedef struct {
   krb5_creds creds;
   krb5_keytab keytab;
 } RUBY_KRB5_KEYTAB;
+
+typedef struct {
+  krb5_magic magic;
+  krb5_principal principal;
+  krb5_timestamp timestamp;
+  krb5_kvno vno;
+  krb5_keyblock key;
+} RUBY_KRB5_KT_ENTRY;
 
 typedef struct {
   krb5_context ctx;
@@ -54,6 +66,12 @@ static void rkrb5_keytab_free(RUBY_KRB5_KEYTAB* ptr){
   if(ptr->ctx)
     krb5_free_context(ptr->ctx);
 
+  free(ptr);
+}
+
+static void rkrb5_kt_entry_free(RUBY_KRB5_KT_ENTRY* ptr){
+  if(!ptr)
+    return;
 
   free(ptr);
 }
@@ -83,6 +101,12 @@ static VALUE rkrb5_keytab_allocate(VALUE klass){
   return Data_Wrap_Struct(klass, 0, rkrb5_keytab_free, ptr);
 }
 
+static VALUE rkrb5_kt_entry_allocate(VALUE klass){
+  RUBY_KRB5_KT_ENTRY* ptr = malloc(sizeof(RUBY_KRB5_KT_ENTRY));
+  memset(ptr, 0, sizeof(RUBY_KRB5_KT_ENTRY));
+  return Data_Wrap_Struct(klass, 0, rkrb5_kt_entry_free, ptr);
+}
+
 static VALUE rkadm5_allocate(VALUE klass){
   RUBY_KADM5* ptr = malloc(sizeof(RUBY_KADM5));
   memset(ptr, 0, sizeof(RUBY_KADM5));
@@ -107,6 +131,12 @@ static VALUE rkrb5_initialize(VALUE self){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
+  return self;
+}
+
+static VALUE rkrb5_kt_entry_initialize(VALUE self){
+  RUBY_KRB5_KT_ENTRY* ptr;
+  Data_Get_Struct(self, RUBY_KRB5_KT_ENTRY, ptr); 
   return self;
 }
 
@@ -177,6 +207,8 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
  */
 static VALUE rkrb5_keytab_each(VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
+  VALUE v_kt_entry;
+  VALUE v_args[0];
   krb5_error_code kerror;
   krb5_kt_cursor cursor;
   krb5_keytab_entry entry;
@@ -196,7 +228,15 @@ static VALUE rkrb5_keytab_each(VALUE self){
   while((kerror = krb5_kt_next_entry(ptr->ctx, ptr->keytab, &entry, &cursor)) == 0){
     krb5_unparse_name(ptr->ctx, entry.principal, &principal);
 
-    rb_yield(rb_str_new2(principal));
+    v_kt_entry = rb_class_new_instance(0, v_args, cKrb5KtEntry);
+
+    rb_iv_set(v_kt_entry, "@principal", rb_str_new2(principal));
+    rb_iv_set(v_kt_entry, "@timestamp", rb_time_new(entry.timestamp, 0));
+    rb_iv_set(v_kt_entry, "@vno", INT2FIX(entry.vno));
+    rb_iv_set(v_kt_entry, "@key", INT2FIX(entry.key.enctype));
+
+    rb_yield(v_kt_entry);
+
     free(principal);
 
     krb5_kt_free_entry(ptr->ctx, &entry);
@@ -792,18 +832,21 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
 #endif
 
 void Init_krb5_auth(){
-  VALUE mKerberos   = rb_define_module("Krb5Auth");
-  VALUE cKrb5       = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
-  VALUE cKrb5Keytab = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
-  cKrb5Exception    = rb_define_class_under(cKrb5, "Exception", rb_eStandardError);
+  mKerberos      = rb_define_module("Krb5Auth");
+  cKrb5          = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
+  cKrb5Keytab    = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
+  cKrb5KtEntry   = rb_define_class_under(cKrb5Keytab, "Entry", rb_cObject);
+  cKrb5Exception = rb_define_class_under(cKrb5, "Exception", rb_eStandardError);
 
   // Allocation functions
   rb_define_alloc_func(cKrb5, rkrb5_allocate);
   rb_define_alloc_func(cKrb5Keytab, rkrb5_keytab_allocate);
+  rb_define_alloc_func(cKrb5KtEntry, rkrb5_kt_entry_allocate);
 
   // Initializers
   rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
   rb_define_method(cKrb5Keytab, "initialize", rkrb5_keytab_initialize, -1);
+  rb_define_method(cKrb5KtEntry, "initialize", rkrb5_kt_entry_initialize, 0);
 
   // Krb5 Methods
   rb_define_method(cKrb5, "get_default_realm", rkrb5_get_default_realm, 0);
@@ -819,6 +862,12 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
+
+  // Krb5::Keytab::Entry Methods
+  rb_define_attr(cKrb5KtEntry, "principal", 1, 0);
+  rb_define_attr(cKrb5KtEntry, "timestamp", 1, 0);
+  rb_define_attr(cKrb5KtEntry, "vno", 1, 0);
+  rb_define_attr(cKrb5KtEntry, "key", 1, 0);
 
 #ifdef HAVE_KADM5_ADMIN_H
   // Kadm5 methods
