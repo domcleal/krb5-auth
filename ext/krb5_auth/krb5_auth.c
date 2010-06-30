@@ -1,18 +1,12 @@
-#include <ruby.h>
-#include <krb5.h>
-#include <string.h>
+#include "krb5_auth.h"
 
-#ifdef HAVE_KADM5_ADMIN_H
-#include <kadm5/admin.h>
-#endif
-
-VALUE mKerberos;
-VALUE cKrb5;
-VALUE cKrb5Keytab;
-VALUE cKrb5KtEntry;
-VALUE cKrb5Exception;
-VALUE cKadm5Exception;
-VALUE sPrincipalStruct;
+extern VALUE mKerberos;
+extern VALUE cKrb5;
+extern VALUE cKrb5Keytab;
+extern VALUE cKrb5KtEntry;
+extern VALUE cKrb5Exception;
+extern VALUE cKadm5Exception;
+extern VALUE sPrincipalStruct;
 
 // Krb5Auth::Krb5
 typedef struct {
@@ -28,14 +22,6 @@ typedef struct {
   krb5_creds creds;
   krb5_keytab keytab;
 } RUBY_KRB5_KEYTAB;
-
-// Krb5Auth::Krb5::Keytab::Entry
-typedef struct {
-  krb5_principal principal;
-  krb5_timestamp timestamp;
-  krb5_kvno vno;
-  krb5_keyblock key;
-} RUBY_KRB5_KT_ENTRY;
 
 // Krb5Auth::Kadm5
 typedef struct {
@@ -78,13 +64,6 @@ static void rkrb5_keytab_free(RUBY_KRB5_KEYTAB* ptr){
   free(ptr);
 }
 
-// Free function for the Krb5Auth::Krb5::Keytab::Entry class.
-static void rkrb5_kt_entry_free(RUBY_KRB5_KT_ENTRY* ptr){
-  if(!ptr)
-    return;
-
-  free(ptr);
-}
 
 // Free function for the Krb5Auth::Kadm5 class.
 static void rkadm5_free(RUBY_KADM5* ptr){
@@ -114,13 +93,6 @@ static VALUE rkrb5_keytab_allocate(VALUE klass){
   return Data_Wrap_Struct(klass, 0, rkrb5_keytab_free, ptr);
 }
 
-// Allocation function for the Krb5Auth::Krb5::Keytab::Entry class.
-static VALUE rkrb5_kt_entry_allocate(VALUE klass){
-  RUBY_KRB5_KT_ENTRY* ptr = malloc(sizeof(RUBY_KRB5_KT_ENTRY));
-  memset(ptr, 0, sizeof(RUBY_KRB5_KT_ENTRY));
-  return Data_Wrap_Struct(klass, 0, rkrb5_kt_entry_free, ptr);
-}
-
 // Allocation function for the Krb5Auth::Kadm5 class.
 static VALUE rkadm5_allocate(VALUE klass){
   RUBY_KADM5* ptr = malloc(sizeof(RUBY_KADM5));
@@ -146,21 +118,6 @@ static VALUE rkrb5_initialize(VALUE self){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
-  return self;
-}
-
-/*
- * call-seq:
- *
- *   Krb5Auth::Krb5::Keytab::Entry.new
- *
- * Creates and returns a new Krb5Auth::Krb5::Keytab::Entry object. These
- * objects are what is typically returned from the various Krb5::Keytab
- * methods.
- */
-static VALUE rkrb5_kt_entry_initialize(VALUE self){
-  RUBY_KRB5_KT_ENTRY* ptr;
-  Data_Get_Struct(self, RUBY_KRB5_KT_ENTRY, ptr); 
   return self;
 }
 
@@ -868,19 +825,16 @@ void Init_krb5_auth(){
   mKerberos      = rb_define_module("Krb5Auth");
   cKrb5          = rb_define_class_under(mKerberos, "Krb5", rb_cObject);
   cKrb5Keytab    = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
-  cKrb5KtEntry   = rb_define_class_under(cKrb5Keytab, "Entry", rb_cObject);
   cKrb5Exception = rb_define_class_under(cKrb5, "Exception", rb_eStandardError);
 
   // Allocation functions
   rb_define_alloc_func(cKrb5, rkrb5_allocate);
   rb_define_alloc_func(cKrb5Keytab, rkrb5_keytab_allocate);
-  rb_define_alloc_func(cKrb5KtEntry, rkrb5_kt_entry_allocate);
-
+  
   // Initializers
   rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
   rb_define_method(cKrb5Keytab, "initialize", rkrb5_keytab_initialize, -1);
-  rb_define_method(cKrb5KtEntry, "initialize", rkrb5_kt_entry_initialize, 0);
-
+  
   // Krb5 Methods
   rb_define_method(cKrb5, "get_default_realm", rkrb5_get_default_realm, 0);
   rb_define_method(cKrb5, "get_init_creds_password", rkrb5_get_init_creds_passwd, 2);
@@ -896,12 +850,6 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
-
-  // Krb5::Keytab::Entry Methods
-  rb_define_attr(cKrb5KtEntry, "principal", 1, 1);
-  rb_define_attr(cKrb5KtEntry, "timestamp", 1, 1);
-  rb_define_attr(cKrb5KtEntry, "vno", 1, 1);
-  rb_define_attr(cKrb5KtEntry, "key", 1, 1);
 
 #ifdef HAVE_KADM5_ADMIN_H
   // Kadm5 methods
@@ -955,4 +903,6 @@ void Init_krb5_auth(){
 
   /* 0.8.4: The version of the custom krb5_auth library */
   rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.4"));
+
+  Init_keytab_entry();
 }
