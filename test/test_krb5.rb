@@ -20,10 +20,12 @@ class TC_Krb5 < Test::Unit::TestCase
 
   def setup
     @krb5 = Krb5Auth::Krb5.new
+    @keytab = 'FILE:/home/dberger/dberger.keytab'
+    @user = 'foo@DBERGER.LOCALHOST'
   end
 
   test "version constant" do
-    assert_equal('0.8.3', Krb5Auth::Krb5::VERSION)
+    assert_equal('0.8.4', Krb5Auth::Krb5::VERSION)
   end
 
   test "get_default_realm basic functionality" do
@@ -58,6 +60,29 @@ class TC_Krb5 < Test::Unit::TestCase
   test "calling get_init_creds_password after closing the object raises a specific error message" do
     @krb5.close
     assert_raise_message('no context has been established'){ @krb5.get_init_creds_password('foo', 'xxx') }
+  end
+
+  test "get_init_creds_keytab basic functionality" do
+    assert_respond_to(@krb5, :get_init_creds_keytab)
+  end
+
+  test "get_init_creds_keytab accepts a keytab" do
+    assert_nothing_raised{ @krb5.get_init_creds_keytab(@user, @keytab) }
+  end
+
+  test "get_init_creds_keytab requires at least one argument" do
+    assert_raise(ArgumentError){ @krb5.get_init_creds_keytab }
+  end
+
+  test "get_init_creds_keytab requires string arguments" do
+    assert_raise(TypeError){ @krb5.get_init_creds_keytab(1) }
+    assert_raise(TypeError){ @krb5.get_init_creds_keytab(@user, 1) }
+    assert_raise(TypeError){ @krb5.get_init_creds_keytab(@user, @keytab, 1) }
+  end
+
+  test "calling get_init_creds_keytab after closing the object raises an error" do
+    @krb5.close
+    assert_raise(Krb5Auth::Krb5::Exception){ @krb5.get_init_creds_keytab(@user, @keytab) }
   end
 
   test "change_password basic functionality" do
