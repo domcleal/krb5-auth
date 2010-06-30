@@ -1,7 +1,10 @@
 require 'rake'
 require 'rake/testtask'
+require 'rake/extensiontask'
 require 'rake/clean'
 require 'rbconfig'
+
+Rake::ExtensionTask.new('krb5_auth')
 
 desc 'Clean any build files and .gem files'
 task :clean do
@@ -11,14 +14,6 @@ task :clean do
   end
   Dir['*.gem'].each{ |f| File.delete(f) }
   rm_rf('lib')
-end
-
-desc 'Build the library'
-task :build => [:clean] do
-  Dir.chdir('ext') do
-    ruby 'extconf.rb'
-    sh 'make'
-  end
 end
 
 desc 'Create a tarball of the source'
@@ -50,18 +45,7 @@ namespace :gem do
   end
 
   desc 'Create a binary gem'
-  task :binary => [:clean] do
-    make = Config::CONFIG['host_os'] =~ /win32|windows|msdos|mswin/i ? 'nmake' : 'make'
-
-    Dir.chdir('ext') do
-      ruby 'extconf.rb'
-      sh make
-    end
-
-    mkdir 'lib'
-    file = File.join('ext', 'krb5_auth.' + Config::CONFIG['DLEXT'])
-    cp file, 'lib'
-
+  task :binary => [:compile] do
     spec = eval(IO.read('krb5-auth.gemspec'))
     spec.platform = Gem::Platform::CURRENT
     spec.extensions = nil
@@ -73,14 +57,14 @@ end
 
 namespace 'test' do
   Rake::TestTask.new('all') do |t|
-    task :all => :build
+    task :all => :compile
     t.libs << 'ext' 
     t.warning = true
     t.verbose = true
   end
 
   Rake::TestTask.new('krb5') do |t|
-    task :krb5 => :build
+    task :krb5 => :compile
     t.libs << 'ext' 
     t.test_files = FileList['test/test_krb5.rb']
     t.warning = true
@@ -88,7 +72,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('keytab') do |t|
-    task :keytab => :build
+    task :keytab => :compile
     t.libs << 'ext' 
     t.test_files = FileList['test/test_krb5_keytab.rb']
     t.warning = true
@@ -96,7 +80,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('kadm5') do |t|
-    task :kadm5 => :build
+    task :kadm5 => :compile
     t.libs << 'ext' 
     t.test_files = FileList['test/test_kadm5.rb']
     t.warning = true

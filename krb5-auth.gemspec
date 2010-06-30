@@ -2,7 +2,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name       = 'krb5-auth'
-  spec.version    = '0.8.3'
+  spec.version    = '0.8.4'
   spec.author     = 'Daniel Berger'
   spec.license    = 'Artistic 2.0'
   spec.email      = 'djberg96@gmail.com'
@@ -12,10 +12,12 @@ Gem::Specification.new do |spec|
   spec.has_rdoc   = true
   spec.test_files = Dir['test/test*']
   spec.extensions = ['ext/extconf.rb']
-  spec.files      = Dir['**/*'].reject{ |f| f.include?('git') }
+  spec.files      = Dir['**/*'].reject{ |f| f.include?('git') || f.include?('tmp') }
   
   spec.rubyforge_project = 'krb5-auth'
-  spec.extra_rdoc_files  = ['README', 'CHANGES', 'MANIFEST', 'ext/ruby_krb5_auth.c']
+  spec.extra_rdoc_files  = ['README', 'CHANGES', 'MANIFEST'] + Dir['ext/krb5_auth/*.c']
+
+  spec.add_dependency('rake-compiler')
   
   spec.add_development_dependency('test-unit', '>= 2.0.6')
   spec.add_development_dependency('dbi-dbrc', '>= 1.1.6')
