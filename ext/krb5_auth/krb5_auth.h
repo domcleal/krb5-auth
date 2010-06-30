@@ -25,4 +25,11 @@ typedef struct {
   krb5_keyblock key;
 } RUBY_KRB5_KT_ENTRY;
 
+// Krb5Auth::Krb5::Keytab
+typedef struct {
+  krb5_context ctx;
+  krb5_creds creds;
+  krb5_keytab keytab;
+} RUBY_KRB5_KEYTAB;
+
 #endif
