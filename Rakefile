@@ -8,10 +8,6 @@ Rake::ExtensionTask.new('krb5_auth')
 
 desc 'Clean any build files and .gem files'
 task :clean do
-  Dir.chdir('ext') do
-    rm_rf 'conftest.dSYM' if File.exists?('conftest.dSYM')
-    sh 'make distclean' rescue nil
-  end
   Dir['*.gem'].each{ |f| File.delete(f) }
   rm_rf('lib')
 end
