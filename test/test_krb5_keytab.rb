@@ -47,11 +47,11 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_nothing_raised{ @keytab.each{} }
   end
 
-  test "next entry yields a name" do
+  test "each method yields a keytab entry object" do
     array = []
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
-    assert_kind_of(String, array[0])
+    assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
     assert_true(array.size > 1)
   end
 
