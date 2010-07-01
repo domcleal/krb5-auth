@@ -42,7 +42,7 @@ typedef struct {
 } RUBY_KRB5_KEYTAB;
 
 typedef struct {
-  krb5_princ principal;
+  krb5_principal principal;
 } RUBY_KRB5_PRINC;
 
 #endif
