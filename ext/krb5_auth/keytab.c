@@ -175,6 +175,126 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
   return self;
 }
 
+// Singleton Methods
+
+/*
+ * call-seq:
+ *   Krb5Auth::Krb5::Keytab.foreach(keytab = nil){ |entry|
+ *     puts entry.inspect
+ *   }
+ *
+ * Iterate over each entry in the +keytab+ and yield a Krb5::Keytab::Entry
+ * object for each entry found.
+ *
+ * If no +keytab+ is provided, then the default keytab is used.
+ */
+static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
+  RUBY_KRB5_KEYTAB* ptr;
+  VALUE v_kt_entry;
+  VALUE v_keytab_name;
+  VALUE v_args[0];
+  krb5_error_code kerror;
+  krb5_kt_cursor cursor;
+  krb5_keytab keytab;
+  krb5_keytab_entry entry;
+  krb5_context context;
+  char* principal;
+  char keytab_name[512];
+
+  rb_scan_args(argc, argv, "01", &v_keytab_name);
+
+  kerror = krb5_init_context(&context); 
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
+
+  // Use the default keytab name if one isn't provided.
+  if(NIL_P(v_keytab_name)){
+    kerror = krb5_kt_default_name(context, keytab_name, 512);
+
+    if(kerror){
+      rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
+
+      if(context)
+        krb5_free_context(context);
+    }
+  } 
+  else{
+    Check_Type(v_keytab_name, T_STRING);
+    strncpy(keytab_name, StringValuePtr(v_keytab_name), 512);
+  }
+
+  kerror = krb5_kt_resolve(
+    context,
+    keytab_name,
+    &keytab
+  );
+
+  if(kerror){
+    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
+
+    if(context)
+      krb5_free_context(context);
+  }
+
+  kerror = krb5_kt_start_seq_get(
+    context,
+    keytab,
+    &cursor
+  );
+
+  if(kerror){
+    rb_raise(cKrb5Exception, "krb5_kt_start_seq_get: %s", error_message(kerror));
+
+    if(context)
+      krb5_free_context(context);
+
+    if(keytab)
+      krb5_kt_close(context, keytab);
+  }
+
+  while((kerror = krb5_kt_next_entry(context, keytab, &entry, &cursor)) == 0){
+    krb5_unparse_name(context, entry.principal, &principal);
+
+    v_kt_entry = rb_class_new_instance(0, v_args, cKrb5KtEntry);
+
+    rb_iv_set(v_kt_entry, "@principal", rb_str_new2(principal));
+    rb_iv_set(v_kt_entry, "@timestamp", rb_time_new(entry.timestamp, 0));
+    rb_iv_set(v_kt_entry, "@vno", INT2FIX(entry.vno));
+    rb_iv_set(v_kt_entry, "@key", INT2FIX(entry.key.enctype));
+
+    rb_yield(v_kt_entry);
+
+    free(principal);
+
+    krb5_kt_free_entry(context, &entry);
+  }
+
+  kerror = krb5_kt_end_seq_get(
+    context,
+    keytab,
+    &cursor
+  );
+
+  if(kerror){
+    rb_raise(cKrb5Exception, "krb5_kt_end_seq_get: %s", error_message(kerror));
+
+    if(context)
+      krb5_free_context(context);
+
+    if(keytab)
+      krb5_kt_close(context, keytab);
+  }
+
+  if(keytab)
+    krb5_kt_close(context, keytab);
+
+  if(context)
+    krb5_free_context(context);
+
+  return Qnil;
+}
+
 void Init_keytab(){
   /* The Krb5Auth::Krb5::Keytab class encapsulates a Kerberos keytab. */
   cKrb5Keytab = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
@@ -184,6 +304,9 @@ void Init_keytab(){
 
   // Constructor
   rb_define_method(cKrb5Keytab, "initialize", rkrb5_keytab_initialize, -1);
+
+  // Singleton Methods
+  rb_define_singleton_method(cKrb5Keytab, "foreach", rkrb5_s_keytab_foreach, -1);
 
   // Instance Methods
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);

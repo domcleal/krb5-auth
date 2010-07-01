@@ -55,6 +55,18 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_true(array.size > 1)
   end
 
+  test "foreach singleton method basic functionality" do
+    assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@file){} }
+  end
+
+  test "foreach singleton method yields keytab entry objects" do
+    array = []
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@file){ |entry| array << entry } }
+    assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
+    assert_true(array.size > 1)
+  end
+
   def teardown
     @keytab.close
     @keytab = nil
