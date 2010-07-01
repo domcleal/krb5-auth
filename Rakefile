@@ -75,6 +75,14 @@ namespace 'test' do
     t.verbose = true
   end
 
+  Rake::TestTask.new('principal') do |t|
+    task :principal => :compile
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_principal.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
   Rake::TestTask.new('kadm5') do |t|
     task :kadm5 => :compile
     t.libs << 'ext' 

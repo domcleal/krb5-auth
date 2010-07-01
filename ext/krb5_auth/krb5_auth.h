@@ -14,6 +14,7 @@ VALUE cKrb5;
 VALUE cKrb5Keytab;
 VALUE cKrb5KtEntry;
 VALUE cKrb5Exception;
+VALUE cKrb5Principal;
 VALUE cKadm5;
 VALUE cKadm5Exception;
 VALUE sPrincipalStruct;
@@ -39,5 +40,9 @@ typedef struct {
   krb5_creds creds;
   krb5_keytab keytab;
 } RUBY_KRB5_KEYTAB;
+
+typedef struct {
+  krb5_princ principal;
+} RUBY_KRB5_PRINC;
 
 #endif

@@ -370,6 +370,7 @@ void Init_krb5_auth(){
   rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.4"));
 
   Init_kadm5();
+  Init_principal();
   Init_keytab();
   Init_keytab_entry();
 }
