@@ -87,14 +87,14 @@ static VALUE rkrb5_keytab_each(VALUE self){
  * Returns the default keytab name.
  */
 static VALUE rkrb5_keytab_default_name(VALUE self){
-  char default_name[512];
+  char default_name[MAX_KEYTAB_NAME_LEN];
   krb5_error_code kerror;
   RUBY_KRB5_KEYTAB* ptr;
   VALUE v_default_name;
 
   Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
   
-  kerror = krb5_kt_default_name(ptr->ctx, default_name, 512);
+  kerror = krb5_kt_default_name(ptr->ctx, default_name, MAX_KEYTAB_NAME_LEN);
 
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
@@ -139,7 +139,7 @@ static VALUE rkrb5_keytab_close(VALUE self){
 static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
-  char keytab_name[512];
+  char keytab_name[MAX_KEYTAB_NAME_LEN];
   VALUE v_keytab_name;
 
   rb_scan_args(argc, argv, "01", &v_keytab_name);
@@ -153,14 +153,14 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
 
   // Use the default keytab name if one isn't provided.
   if(NIL_P(v_keytab_name)){
-    kerror = krb5_kt_default_name(ptr->ctx, keytab_name, 512);
+    kerror = krb5_kt_default_name(ptr->ctx, keytab_name, MAX_KEYTAB_NAME_LEN);
 
     if(kerror)
       rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
   } 
   else{
     Check_Type(v_keytab_name, T_STRING);
-    strncpy(keytab_name, StringValuePtr(v_keytab_name), 512);
+    strncpy(keytab_name, StringValuePtr(v_keytab_name), MAX_KEYTAB_NAME_LEN);
   }
 
   kerror = krb5_kt_resolve(
@@ -199,7 +199,7 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
   krb5_keytab_entry entry;
   krb5_context context;
   char* principal;
-  char keytab_name[512];
+  char keytab_name[MAX_KEYTAB_NAME_LEN];
 
   rb_scan_args(argc, argv, "01", &v_keytab_name);
 
@@ -210,7 +210,7 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
 
   // Use the default keytab name if one isn't provided.
   if(NIL_P(v_keytab_name)){
-    kerror = krb5_kt_default_name(context, keytab_name, 512);
+    kerror = krb5_kt_default_name(context, keytab_name, MAX_KEYTAB_NAME_LEN);
 
     if(kerror){
       rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
@@ -221,7 +221,7 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
   } 
   else{
     Check_Type(v_keytab_name, T_STRING);
-    strncpy(keytab_name, StringValuePtr(v_keytab_name), 512);
+    strncpy(keytab_name, StringValuePtr(v_keytab_name), MAX_KEYTAB_NAME_LEN);
   }
 
   kerror = krb5_kt_resolve(
