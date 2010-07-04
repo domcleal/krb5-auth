@@ -94,7 +94,7 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
   VALUE v_user, v_keytab_name, v_service;
   char* user;
   char* service;
-  char keytab_name[512];
+  char keytab_name[MAX_KEYTAB_NAME_LEN];
 
   krb5_error_code kerror;
   krb5_get_init_creds_opt opt;
@@ -110,6 +110,7 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
   Check_Type(v_user, T_STRING);
   user = StringValuePtr(v_user);
 
+  // Convert the name to a kerberos principal
   kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
 
   if(kerror)
@@ -117,14 +118,14 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
 
   // Use the default keytab if none is specified.
   if(NIL_P(v_keytab_name)){
-    kerror = krb5_kt_default_name(ptr->ctx, keytab_name, 512);
+    kerror = krb5_kt_default_name(ptr->ctx, keytab_name, MAX_KEYTAB_NAME_LEN);
 
     if(kerror)
       rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
   }
   else{
     Check_Type(v_keytab_name, T_STRING);
-    strncpy(keytab_name, StringValuePtr(v_keytab_name), 512);
+    strncpy(keytab_name, StringValuePtr(v_keytab_name), MAX_KEYTAB_NAME_LEN);
   }
 
   if(!NIL_P(v_service)){
