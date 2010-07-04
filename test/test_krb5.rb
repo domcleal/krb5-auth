@@ -1,7 +1,9 @@
 ########################################################################
 # test_krb5.rb
 #
-# Test suite for the Krb5Auth::Krb5 class.
+# Test suite for the Krb5Auth::Krb5 class. At the moment, this suite
+# requires that you export "testuser1" to a local keytab file called
+# "test.keytab" in the "test" directory for certain tests to pass.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -13,15 +15,19 @@ require 'krb5_auth'
 class TC_Krb5 < Test::Unit::TestCase
   def self.startup
     @@cache_found = true
+
     Open3.popen3('klist') do |stdin, stdout, stderr|
       @@cache_found = false unless stderr.gets.nil?
     end
+
+    @@krb5_conf = ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
+    @@realm  = IO.read(@@krb5_conf).grep(/default_realm/).first.split('=').last.lstrip.chomp
   end
 
   def setup
-    @krb5 = Krb5Auth::Krb5.new
-    @keytab = 'FILE:/home/dberger/dberger.keytab'
-    @user = 'foo@DBERGER.LOCALHOST'
+    @krb5   = Krb5Auth::Krb5.new
+    @keytab = "FILE:" + File.expand_path(File.join(File.dirname(__FILE__), 'test.keytab'))
+    @user   = "testuser1@" + @@realm
   end
 
   test "version constant" do
@@ -36,6 +42,10 @@ class TC_Krb5 < Test::Unit::TestCase
 
   test "get_default_realm takes no arguments" do
     assert_raise(ArgumentError){ @krb5.get_default_realm('localhost') }
+  end
+
+  test "get_default_realm matches what we found in the krb5.conf file" do
+    assert_equal(@@realm, @krb5.get_default_realm)
   end
 
   test "get_init_creds_password basic functionality" do
