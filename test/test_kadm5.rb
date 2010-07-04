@@ -2,6 +2,10 @@
 # test_kadm5.rb
 #
 # Tests for the Krb5Auth::Kadm5 class.
+#
+# This test suite requires that you have an entry in your .dbrc file
+# for 'test-kerberos' which includes an admin principal, password and
+# optional $KRB5_CONFIG file.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -13,7 +17,7 @@ require 'krb5_auth'
 class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   def self.startup
     @@info = DBI::DBRC.new('test-kerberos')
-    ENV['KRB5_CONFIG'] = @@info.driver
+    ENV['KRB5_CONFIG'] = @@info.driver || ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
   end
 
   def setup
