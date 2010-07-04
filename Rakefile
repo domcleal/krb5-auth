@@ -94,3 +94,6 @@ namespace 'test' do
     t.verbose = true
   end
 end
+
+task :default => ['test:all']
+task :test => ['test:all']
