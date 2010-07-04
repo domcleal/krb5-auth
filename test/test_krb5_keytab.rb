@@ -2,6 +2,10 @@
 # test_krb5.rb
 #
 # Test suite for the Krb5Auth::Krb5 class.
+#
+# At the moment this test suite that there are two or more principals
+# in the keytab. Temporary keytab creation needs to be handled in the
+# startup method somehow.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -52,7 +56,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
-    assert_true(array.size > 1)
+    assert_true(array.size >= 1)
   end
 
   test "foreach singleton method basic functionality" do
