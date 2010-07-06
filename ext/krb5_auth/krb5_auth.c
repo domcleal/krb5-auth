@@ -370,6 +370,72 @@ void Init_krb5_auth(){
   /* 0.8.4: The version of the custom krb5_auth library */
   rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.4"));
 
+  /* 0x0000: None */
+  rb_define_const(cKrb5, "ENCTYPE_NULL", INT2FIX(ENCTYPE_NULL));
+
+  /* 0x0001: DES cbc mode with CRC-32 */
+  rb_define_const(cKrb5, "ENCTYPE_DES_CBC_CRC", INT2FIX(ENCTYPE_DES_CBC_CRC));
+
+  /* 0x0002: DES cbc mode with RSA-MD4 */
+  rb_define_const(cKrb5, "ENCTYPE_DES_CBC_MD4", INT2FIX(ENCTYPE_DES_CBC_MD4));
+
+  /* 0x0003: DES cbc mode with RSA-MD5 */
+  rb_define_const(cKrb5, "ENCTYPE_DES_CBC_MD5", INT2FIX(ENCTYPE_DES_CBC_MD5));
+
+  /* 0x0004: DES cbc mode raw */
+  rb_define_const(cKrb5, "ENCTYPE_DES_CBC_RAW", INT2FIX(ENCTYPE_DES_CBC_RAW));
+
+  /* 0x0005: DES-3 cbc mode with NIST-SHA */
+  rb_define_const(cKrb5, "ENCTYPE_DES3_CBC_SHA", INT2FIX(ENCTYPE_DES3_CBC_SHA));
+
+  /* 0x0006: DES-3 cbc mode raw */
+  rb_define_const(cKrb5, "ENCTYPE_DES3_CBC_RAW", INT2FIX(ENCTYPE_DES3_CBC_RAW));
+
+  /* 0x0008: HMAC SHA1 */
+  rb_define_const(cKrb5, "ENCTYPE_DES_HMAC_SHA1", INT2FIX(ENCTYPE_DES_HMAC_SHA1));
+
+  /* 0x0009: DSA with SHA1, CMS signature */
+  rb_define_const(cKrb5, "ENCTYPE_DSA_SHA1_CMS", INT2FIX(ENCTYPE_DSA_SHA1_CMS));
+
+  /* 0x000a: MD5 with RSA, CMS signature */
+  rb_define_const(cKrb5, "ENCTYPE_MD5_RSA_CMS", INT2FIX(ENCTYPE_MD5_RSA_CMS));
+
+  /* 0x000b: SHA1 with RSA, CMS signature */
+  rb_define_const(cKrb5, "ENCTYPE_SHA1_RSA_CMS", INT2FIX(ENCTYPE_SHA1_RSA_CMS));
+
+  /* 0x000c: RC2 cbc mode, CMS enveloped data */
+  rb_define_const(cKrb5, "ENCTYPE_RC2_CBC_ENV", INT2FIX(ENCTYPE_RC2_CBC_ENV));
+
+  /* 0x000d: RSA encryption, CMS enveloped data */
+  rb_define_const(cKrb5, "ENCTYPE_RSA_ENV", INT2FIX(ENCTYPE_RSA_ENV));
+
+  /* 0x000e: RSA w/OEAP encryption, CMS enveloped data */
+  rb_define_const(cKrb5, "ENCTYPE_RSA_ES_OAEP_ENV", INT2FIX(ENCTYPE_RSA_ES_OAEP_ENV));
+
+  /* 0x000f: DES-3 cbc mode, CMS enveloped data */
+  rb_define_const(cKrb5, "ENCTYPE_DES3_CBC_ENV", INT2FIX(ENCTYPE_DES3_CBC_ENV));
+
+  /* 0x0010: DES3 CBC SHA1 */
+  rb_define_const(cKrb5, "ENCTYPE_DES3_CBC_SHA1", INT2FIX(ENCTYPE_DES3_CBC_SHA1));
+
+  /* 0x0011: AES128 CTS HMAC SHA1 96 */
+  rb_define_const(cKrb5, "ENCTYPE_AES128_CTS_HMAC_SHA1_96", INT2FIX(ENCTYPE_AES128_CTS_HMAC_SHA1_96));
+
+  /* 0x0012: AES256 CTS HMAC SHA1 96 */
+  rb_define_const(cKrb5, "ENCTYPE_AES256_CTS_HMAC_SHA1_96", INT2FIX(ENCTYPE_AES256_CTS_HMAC_SHA1_96));
+
+  /* 0x0017: ARCFOUR HMAC */
+  rb_define_const(cKrb5, "ENCTYPE_ARCFOUR_HMAC", INT2FIX(ENCTYPE_ARCFOUR_HMAC));
+
+  /* 0x0018: ARCFOUR HMAC EXP */
+  rb_define_const(cKrb5, "ENCTYPE_ARCFOUR_HMAC_EXP", INT2FIX(ENCTYPE_ARCFOUR_HMAC_EXP));
+
+  /* 0x01ff: Unknown */
+  rb_define_const(cKrb5, "ENCTYPE_UNKNOWN", INT2FIX(ENCTYPE_UNKNOWN));
+
+  // Class initialization
+
+  Init_context();
   Init_kadm5();
   Init_principal();
   Init_keytab();

@@ -11,6 +11,7 @@
 
 VALUE mKerberos;
 VALUE cKrb5;
+VALUE cKrb5Context;
 VALUE cKrb5Keytab;
 VALUE cKrb5KtEntry;
 VALUE cKrb5Exception;
@@ -18,6 +19,12 @@ VALUE cKrb5Principal;
 VALUE cKadm5;
 VALUE cKadm5Exception;
 VALUE sPrincipalStruct;
+
+// Krb5Auth::Context
+typedef struct {
+  krb5_context ctx;
+  krb5_enctype etypes;
+} RUBY_KRB5_CONTEXT;
 
 // Krb5Auth::Kadm5
 typedef struct {
