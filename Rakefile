@@ -62,6 +62,14 @@ namespace 'test' do
     t.verbose = true
   end
 
+  Rake::TestTask.new('context') do |t|
+    task :context => :compile
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_context.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
   Rake::TestTask.new('krb5') do |t|
     task :krb5 => :compile
     t.libs << 'ext' 
