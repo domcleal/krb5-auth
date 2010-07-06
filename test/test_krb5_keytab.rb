@@ -16,12 +16,13 @@ require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@file = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
+    @@file  = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
   end
 
   def setup
     @keytab = Krb5Auth::Krb5::Keytab.new
-    @name = nil
+    @entry  = nil
+    @name   = nil
   end
 
   test "constructor takes an optional name" do
@@ -59,6 +60,28 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_true(array.size >= 1)
   end
 
+  test "get_entry basic functionality" do
+    assert_respond_to(@keytab, :get_entry)
+  end
+
+  test "get_entry returns an entry if found in the keytab" do
+    @user = "testuser1@" + Krb5Auth::Krb5.new.default_realm
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
+    assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, @entry)
+  end
+
+  test "get_entry raises an error if no entry is found" do
+    @user = "bogus_user@" + Krb5Auth::Krb5.new.default_realm
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_raise(Krb5Auth::Krb5::Exception){ @keytab.get_entry(@user) }
+  end
+
+  test "find is an alias for get_entry" do
+    assert_respond_to(@keytab, :find)
+    assert_alias_method(@keytab, :find, :get_entry)
+  end
+
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
     assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){} }
@@ -74,5 +97,6 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   def teardown
     @keytab.close if @keytab
     @keytab = nil
+    @entry  = nil
   end
 end

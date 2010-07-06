@@ -104,6 +104,14 @@ static VALUE rkrb5_keytab_default_name(VALUE self){
   return v_default_name;
 }
 
+/*
+ * call-seq:
+ *   keytab.close
+ *
+ * Close the keytab object. Internally this frees up any associated
+ * credential contents and the Kerberos context. Once a keytab object
+ * is closed it cannot be reused.
+ */
 static VALUE rkrb5_keytab_close(VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
 
@@ -118,6 +126,66 @@ static VALUE rkrb5_keytab_close(VALUE self){
   ptr->ctx = NULL;
 
   return Qtrue;
+}
+
+/*
+ * call-seq:
+ *   keytab.get_entry(principal, vno = 0, encoding_type = nil)
+ *
+ * Searches the keytab by +principal+, +vno+ and +encoding_type+. If the
+ * +vno+ is zero (the default), then the first entry that matches +principal+
+ * is returned.
+ *
+ * Returns a Krb5Auth::Krb5::KeytabEntry object if the entry is found.
+ *
+ * Raises an exception if no entry is found.
+ */
+static VALUE rkrb5_keytab_get_entry(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  krb5_error_code kerror;
+  krb5_principal principal;
+  krb5_kvno vno;
+  krb5_enctype enctype;
+  krb5_keytab_entry entry;
+  char* name;
+  VALUE v_principal, v_vno, v_enctype, v_entry;
+  VALUE v_args[0];
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  rb_scan_args(argc, argv, "12", &v_principal, &v_vno, &v_enctype);
+
+  Check_Type(v_principal, T_STRING);
+  name = StringValuePtr(v_principal);
+
+  kerror = krb5_parse_name(ptr->ctx, name, &principal);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_unparse_name: %s", error_message(kerror));
+
+  vno = 0;
+  enctype = 0;
+
+  kerror = krb5_kt_get_entry(
+    ptr->ctx,
+    ptr->keytab,
+    principal,
+    vno,
+    enctype,
+    &entry
+  );
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_kt_get_entry: %s", error_message(kerror));
+
+  v_entry = rb_class_new_instance(0, v_args, cKrb5KtEntry);
+
+  rb_iv_set(v_entry, "@principal", rb_str_new2(name));
+  rb_iv_set(v_entry, "@timestamp", rb_time_new(entry.timestamp, 0));
+  rb_iv_set(v_entry, "@vno", INT2FIX(entry.vno));
+  rb_iv_set(v_entry, "@key", INT2FIX(entry.key.enctype));
+
+  return v_entry;
 }
 
 /*
@@ -312,4 +380,11 @@ void Init_keytab(){
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
+
+  //rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, 1);
+  //rb_define_method(cKrb5Keytab, "delete_entry", rkrb5_keytab_add_entry, 1);
+  rb_define_method(cKrb5Keytab, "get_entry", rkrb5_keytab_get_entry, -1);
+
+  // Aliases
+  rb_define_alias(cKrb5Keytab, "find", "get_entry");
 }
