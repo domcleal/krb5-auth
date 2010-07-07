@@ -1,11 +1,11 @@
 ########################################################################
-# test_krb5.rb
+# test_krb5_keytab.rb
 #
-# Test suite for the Krb5Auth::Krb5 class.
+# Test suite for the Krb5Auth::Krb5::Keytab class.
 #
-# At the moment this test suite that there are two or more principals
-# in the keytab. Temporary keytab creation needs to be handled in the
-# startup method somehow.
+# At the moment this test suite assumes that there are two or more
+# principals in the keytab. Temporary keytab creation needs to be
+# handled in the startup method somehow.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -16,7 +16,7 @@ require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@file  = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
+    @@file = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
   end
 
   def setup
@@ -81,6 +81,24 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_respond_to(@keytab, :find)
     assert_alias_method(@keytab, :find, :get_entry)
   end
+
+=begin
+  test "add_entry basic functionality" do
+    assert_respond_to(@keytab, :add_entry)
+  end
+
+  test "add_entry can add a valid principal" do
+    @user = "testuser1@" + Krb5Auth::Krb5.new.default_realm
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_nothing_raised{ @keytab.add_entry(@user) }
+  end
+
+  test "add_entry fails if an invalid user is added" do
+    @user = "bogus_user@" + Krb5Auth::Krb5.new.default_realm
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_raise(Krb5Auth::Krb5::Exception){ @keytab.add_entry(@user) }
+  end
+=end
 
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
