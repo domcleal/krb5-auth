@@ -1,4 +1,16 @@
-= 0.8.3 - ???
+= 0.8.4 - ???
+* Refactored the source code. Several kerberos components have been split
+  into their own source files.
+* Added the Krb5#set_default_realm method.
+* Added the Krb5#get_init_creds_keytab method.
+* Added the Krb5::Keytab class plus appropriate methods.
+* Added the Krb5::KeytabEntry class plus appropriate methods.
+* Added the Krb5::Principal class plus appropriate methods.
+* Added the Krb5::Context class plus appropriate methods.
+* Added rake-compiler as a dependency.
+* Added tests for new classes.
+
+= 0.8.3 - Never released
 * Modified the Kadm5.new method to handle Kerberos 1.8.0 or later, which
   had modified the function prototype for the kadm5_init_with_password()
   function.
