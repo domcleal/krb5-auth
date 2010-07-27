@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary    = 'A Ruby interface for the the Kerberos library'
   spec.has_rdoc   = true
   spec.test_files = Dir['test/test*']
-  spec.extensions = ['ext/extconf.rb']
+  spec.extensions = ['ext/krb5_auth/extconf.rb']
   spec.files      = Dir['**/*'].reject{ |f| f.include?('git') || f.include?('tmp') }
   
   spec.rubyforge_project = 'krb5-auth'
