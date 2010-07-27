@@ -26,7 +26,7 @@ class TC_Krb5 < Test::Unit::TestCase
 
   def setup
     @krb5   = Krb5Auth::Krb5.new
-    @keytab = "FILE:" + File.expand_path(File.join(File.dirname(__FILE__), 'test.keytab'))
+    @keytab = "/etc/krb5.keytab"
     @user   = "testuser1@" + @@realm
   end
 
@@ -76,7 +76,13 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_respond_to(@krb5, :get_init_creds_keytab)
   end
 
+  test "get_init_creds_keytab uses a default keytab if no keytab file is specified" do
+    omit_unless(File.exists?(@keytab))
+    assert_nothing_raised{ @krb5.get_init_creds_keytab(@user) }
+  end
+
   test "get_init_creds_keytab accepts a keytab" do
+    omit_unless(File.exists?(@keytab))
     assert_nothing_raised{ @krb5.get_init_creds_keytab(@user, @keytab) }
   end
 
