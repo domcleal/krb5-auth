@@ -111,8 +111,14 @@ static VALUE rkrb5_set_default_realm(int argc, VALUE* argv, VALUE self){
 }
 
 /* call-seq:
- *   krb5.get_init_creds_keytab(user, keytab=nil, service=nil)
+ *   krb5.get_init_creds_keytab(principal = nil, keytab = nil, service = nil)
  *
+ * Acquire credentials for +principal+ from +keytab+ using +service+. If
+ * no principal is specified, then a principal is derived from the service
+ * name. If no service name is specified, kerberos defaults to "host".
+ *
+ * If no keytab file is provided, the default keytab file is used. This is
+ * typically /etc/krb5.keytab.
  */
 static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5* ptr;
@@ -130,16 +136,39 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
   if(!ptr->ctx)
     rb_raise(cKrb5Exception, "no context has been established");
 
-  rb_scan_args(argc, argv, "12", &v_user, &v_keytab_name, &v_service);
+  rb_scan_args(argc, argv, "03", &v_user, &v_keytab_name, &v_service);
 
-  Check_Type(v_user, T_STRING);
-  user = StringValuePtr(v_user);
+  // We need the service information for later.
+  if(NIL_P(v_service)){
+    service = NULL;
+  }
+  else{
+    Check_Type(v_service, T_STRING);
+    service = StringValuePtr(v_service);
+  }
 
-  // Convert the name to a kerberos principal
-  kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
+  // Convert the name (or service name) to a kerberos principal.
+  if(NIL_P(v_user)){
+    kerror = krb5_sname_to_principal(
+      ptr->ctx,
+      NULL,
+      service,
+      KRB5_NT_SRV_HST,
+      &ptr->princ
+    );
 
-  if(kerror)
-    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
+    if(kerror)
+      rb_raise(cKrb5Exception, "krb5_sname_to_principal: %s", error_message(kerror));
+  }
+  else{
+    Check_Type(v_user, T_STRING);
+    user = StringValuePtr(v_user);
+
+    kerror = krb5_parse_name(ptr->ctx, user, &ptr->princ); 
+
+    if(kerror)
+      rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
+  }
 
   // Use the default keytab if none is specified.
   if(NIL_P(v_keytab_name)){
@@ -153,14 +182,6 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
     strncpy(keytab_name, StringValuePtr(v_keytab_name), MAX_KEYTAB_NAME_LEN);
   }
 
-  if(!NIL_P(v_service)){
-    Check_Type(v_service, T_STRING);
-    service = StringValuePtr(v_service);
-  }
-  else{
-    service = NULL;
-  }
-
   kerror = krb5_kt_resolve(
     ptr->ctx,
     keytab_name,
@@ -172,7 +193,6 @@ static VALUE rkrb5_get_init_creds_keytab(int argc, VALUE* argv, VALUE self){
 
   krb5_get_init_creds_opt_init(&opt);
 
-  // TODO: Should I store the service or options in the object?
   kerror = krb5_get_init_creds_keytab(
     ptr->ctx,
     &cred,
