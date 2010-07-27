@@ -17,8 +17,31 @@
   keytab.close
 
 = Notes
-  This is a trimmed down and modified version of the original krb5-auth library.
-  It is not (yet) meant yet for general consumption.
+  This fork heavily modifies the original krb5_auth library. Several new
+  classes and methods have been added.
+
+  Krb5Auth::Kadm5
+  Krb5Auth::Krb5::Keytab
+  Krb5Auth::Krb5::KeytabEntry
+  Struct::Principal
+
+  With this fork you can create and delete principals, set and reset passwords,
+  set the default realm, and read keytab entries.
+
+  The code layout has been heavily modified as well. This fork uses separate
+  source files for each class, and uses rake-compiler to glue them all
+  together into a single build.
+
+  Lastly, this fork includes many more tests.
+
+= TODO
+  Replace Struct::Principal with a Principal class with its own methods.
+  Create separate classes for the credentials cache and replay cache.
+
+= CAVEATS
+  OS X users will probably need to install Kerberos manually and specify
+  the dir-config option because it ships with old Kerberos header files,
+  and none of the admin headers or libraries by default.
 
 = Author
   Daniel Berger
