@@ -25,9 +25,10 @@ class TC_Krb5 < Test::Unit::TestCase
   end
 
   def setup
-    @krb5   = Krb5Auth::Krb5.new
-    @keytab = "FILE:" + File.expand_path(File.join(File.dirname(__FILE__), 'test.keytab'))
-    @user   = "testuser1@" + @@realm
+    @krb5    = Krb5Auth::Krb5.new
+    @keytab  = "/etc/krb5.keytab"
+    @user    = "testuser1@" + @@realm
+    @service = "krbtgt"
   end
 
   test "version constant" do
@@ -102,13 +103,23 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_respond_to(@krb5, :get_init_creds_keytab)
   end
 
+  test "get_init_creds_keytab uses a default keytab if no keytab file is specified" do
+    omit_unless(File.exists?(@keytab))
+    assert_nothing_raised{ @krb5.get_init_creds_keytab(@user) }
+  end
+
   test "get_init_creds_keytab accepts a keytab" do
-    pend("keytab support not working yet")
+    omit_unless(File.exists?(@keytab))
     assert_nothing_raised{ @krb5.get_init_creds_keytab(@user, @keytab) }
   end
 
-  test "get_init_creds_keytab requires at least one argument" do
-    assert_raise(ArgumentError){ @krb5.get_init_creds_keytab }
+  test "get_init_creds_keytab uses default service principal if no arguments are provided" do
+    omit_unless(File.exists?(@keytab))
+    assert_nothing_raised{ @krb5.get_init_creds_keytab }
+  end
+
+  test "get_init_creds_keytab accepts a service name" do
+    assert_nothing_raised{ @krb5.get_init_creds_keytab(@user, @keytab, @service) }
   end
 
   test "get_init_creds_keytab requires string arguments" do
