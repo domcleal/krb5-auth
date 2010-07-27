@@ -8,14 +8,6 @@ extern VALUE cKrb5Exception;
 extern VALUE cKadm5Exception;
 extern VALUE sPrincipalStruct;
 
-// Krb5Auth::Krb5
-typedef struct {
-  krb5_context ctx;
-  krb5_creds creds;
-  krb5_principal princ;
-  krb5_keytab keytab;
-} RUBY_KRB5;
-
 // Free function for the Krb5Auth::Krb5 class.
 static void rkrb5_free(RUBY_KRB5* ptr){
   if(!ptr)

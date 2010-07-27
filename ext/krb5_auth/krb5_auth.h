@@ -20,6 +20,14 @@ VALUE cKadm5;
 VALUE cKadm5Exception;
 VALUE sPrincipalStruct;
 
+// Krb5Auth::Krb5
+typedef struct {
+  krb5_context ctx;
+  krb5_creds creds;
+  krb5_principal princ;
+  krb5_keytab keytab;
+} RUBY_KRB5;
+
 // Krb5Auth::Context
 typedef struct {
   krb5_context ctx;

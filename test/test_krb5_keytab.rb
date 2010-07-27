@@ -16,7 +16,7 @@ require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@file = "FILE:" + File.join(File.dirname(__FILE__), 'test.keytab')
+    @@file = '/etc/krb5.keytab'
   end
 
   def setup
@@ -53,6 +53,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "each method yields a keytab entry object" do
+    omit_unless(File.exists?(@@file))
     array = []
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
@@ -65,6 +66,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "get_entry returns an entry if found in the keytab" do
+    omit_unless(File.exists?(@@file))
     @user = "testuser1@" + Krb5Auth::Krb5.new.default_realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
@@ -72,6 +74,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "get_entry raises an error if no entry is found" do
+    omit_unless(File.exists?(@@file))
     @user = "bogus_user@" + Krb5Auth::Krb5.new.default_realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_raise(Krb5Auth::Krb5::Exception){ @keytab.get_entry(@user) }
