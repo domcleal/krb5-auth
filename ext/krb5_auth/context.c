@@ -1,7 +1,5 @@
 #include "krb5_auth.h"
 
-extern VALUE cKrb5Context;
-
 // Free function for the Krb5Auth::Krb5::Context class.
 static void rkrb5_context_free(RUBY_KRB5_CONTEXT* ptr){
   if(!ptr)
