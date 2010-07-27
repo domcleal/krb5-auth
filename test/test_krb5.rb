@@ -21,7 +21,7 @@ class TC_Krb5 < Test::Unit::TestCase
     end
 
     @@krb5_conf = ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
-    @@realm  = IO.read(@@krb5_conf).grep(/default_realm/).first.split('=').last.lstrip.chomp
+    @@realm = IO.read(@@krb5_conf).grep(/default_realm/).first.split('=').last.lstrip.chomp
   end
 
   def setup
@@ -46,6 +46,32 @@ class TC_Krb5 < Test::Unit::TestCase
 
   test "get_default_realm matches what we found in the krb5.conf file" do
     assert_equal(@@realm, @krb5.get_default_realm)
+  end
+
+  test "default_realm is an alias for get_default_realm" do
+    assert_alias_method(@krb5, :default_realm, :get_default_realm)
+  end
+
+  test "set_default_realm basic functionality" do
+    assert_respond_to(@krb5, :set_default_realm)
+  end
+
+  test "set_default_realm with no arguments uses the default realm" do
+    assert_nothing_raised{ @krb5.set_default_realm }
+    assert_equal(@@realm, @krb5.get_default_realm)
+  end
+
+  test "set_default_realm with an argument sets the default realm as expected" do
+    assert_nothing_raised{ @krb5.set_default_realm('TEST.REALM') }
+    assert_equal('TEST.REALM', @krb5.get_default_realm)
+  end
+
+  test "argument to set_default_realm must be a string" do
+    assert_raise(TypeError){ @krb5.set_default_realm(1) }
+  end
+
+  test "set_default_realm accepts a maximum of one argument" do
+    assert_raise(ArgumentError){ @krb5.set_default_realm('FOO', 'BAR') }
   end
 
   test "get_init_creds_password basic functionality" do

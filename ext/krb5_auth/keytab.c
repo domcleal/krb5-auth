@@ -130,6 +130,64 @@ static VALUE rkrb5_keytab_close(VALUE self){
 
 /*
  * call-seq:
+ *   keytab.delete_entry(principal, vno = 0, enctype = nil)
+ */
+static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
+  return self;
+}
+
+/*
+ * call-seq:
+ *   keytab.add_entry(principal, vno = 0, enctype = nil)
+ *
+ * TODO: Not working yet. Gotta figure out how to initialize a keytab entry
+ * struct properly.
+ */
+/*
+static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  krb5_error_code kerror;
+  krb5_keytab_entry entry;
+  krb5_principal principal;
+  char* name;
+  VALUE v_name, v_vno, v_enctype;
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  rb_scan_args(argc, argv, "12", &v_name, &v_vno, &v_enctype);
+
+  Check_Type(v_name, T_STRING);
+
+  name = StringValuePtr(v_name);
+
+  kerror = krb5_parse_name(ptr->ctx, name, &entry.principal);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_unparse_name: %s", error_message(kerror));
+
+  entry.vno = 0;
+  entry.key.enctype = 0;
+  entry.key.length  = 16;
+
+  kerror = krb5_kt_add_entry(
+    ptr->ctx,
+    ptr->keytab,
+    &entry
+  );
+
+  if(kerror){
+    krb5_kt_free_entry(ptr->ctx, &entry);
+    rb_raise(cKrb5Exception, "krb5_kt_add_entry: %s", error_message(kerror));
+  }
+
+  krb5_kt_free_entry(ptr->ctx, &entry);
+  
+  return self;
+}
+*/
+
+/*
+ * call-seq:
  *   keytab.get_entry(principal, vno = 0, encoding_type = nil)
  *
  * Searches the keytab by +principal+, +vno+ and +encoding_type+. If the
@@ -184,6 +242,8 @@ static VALUE rkrb5_keytab_get_entry(int argc, VALUE* argv, VALUE self){
   rb_iv_set(v_entry, "@timestamp", rb_time_new(entry.timestamp, 0));
   rb_iv_set(v_entry, "@vno", INT2FIX(entry.vno));
   rb_iv_set(v_entry, "@key", INT2FIX(entry.key.enctype));
+
+  krb5_kt_free_entry(ptr->ctx, &entry);
 
   return v_entry;
 }
@@ -381,8 +441,8 @@ void Init_keytab(){
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
 
-  //rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, 1);
-  //rb_define_method(cKrb5Keytab, "delete_entry", rkrb5_keytab_add_entry, 1);
+  //rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
+  //rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
   rb_define_method(cKrb5Keytab, "get_entry", rkrb5_keytab_get_entry, -1);
 
   // Aliases

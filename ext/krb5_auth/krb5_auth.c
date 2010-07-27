@@ -85,6 +85,39 @@ static VALUE rkrb5_get_default_realm(VALUE self){
   return rb_str_new2(realm);
 }
 
+/*
+ * call-seq:
+ *   krb.set_default_realm(realm = nil)
+ *
+ * Sets the default realm to +realm+. If no argument is provided, then the
+ * default realm in your krb5.conf file is used.
+ */
+static VALUE rkrb5_set_default_realm(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5* ptr;
+  VALUE v_realm;
+  char* realm;
+  krb5_error_code kerror;
+
+  Data_Get_Struct(self, RUBY_KRB5, ptr); 
+
+  rb_scan_args(argc, argv, "01", &v_realm); 
+
+  if(NIL_P(v_realm)){
+    realm = NULL;
+  }
+  else{
+    Check_Type(v_realm, T_STRING);
+    realm = StringValuePtr(v_realm);
+  }
+
+  kerror = krb5_set_default_realm(ptr->ctx, realm);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_set_default_realm: %s", error_message(kerror));
+
+  return self;
+}
+
 /* call-seq:
  *   krb5.get_init_creds_keytab(user, keytab=nil, service=nil)
  *
@@ -357,12 +390,13 @@ void Init_krb5_auth(){
   rb_define_method(cKrb5, "initialize", rkrb5_initialize, 0);
   
   // Krb5 Methods
+  rb_define_method(cKrb5, "change_password", rkrb5_change_password, 2);
+  rb_define_method(cKrb5, "close", rkrb5_close, 0);
   rb_define_method(cKrb5, "get_default_realm", rkrb5_get_default_realm, 0);
   rb_define_method(cKrb5, "get_init_creds_password", rkrb5_get_init_creds_passwd, 2);
   rb_define_method(cKrb5, "get_init_creds_keytab", rkrb5_get_init_creds_keytab, -1);
   rb_define_method(cKrb5, "get_default_principal", rkrb5_get_default_principal, 0);
-  rb_define_method(cKrb5, "change_password", rkrb5_change_password, 2);
-  rb_define_method(cKrb5, "close", rkrb5_close, 0);
+  rb_define_method(cKrb5, "set_default_realm", rkrb5_set_default_realm, -1);
 
   rb_define_alias(cKrb5, "default_realm", "get_default_realm");
   rb_define_alias(cKrb5, "default_principal", "get_default_principal");
