@@ -1,4 +1,4 @@
-= 0.8.4 - ???
+= 0.8.4 - 27-Jul-2010
 * Refactored the source code. Several kerberos components have been split
   into their own source files.
 * Added the Krb5#set_default_realm method.
