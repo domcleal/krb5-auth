@@ -26,7 +26,7 @@ class TC_Krb5 < Test::Unit::TestCase
 
   def setup
     @krb5    = Krb5Auth::Krb5.new
-    @keytab  = "/etc/krb5.keytab"
+    @keytab  = Krb5Auth::Krb5::Keytab.new.default_name || "/etc/krb5.keytab"
     @user    = "testuser1@" + @@realm
     @service = "krbtgt"
   end
