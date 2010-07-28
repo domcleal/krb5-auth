@@ -45,7 +45,7 @@ namespace :gem do
   end
 
   desc 'Create a binary gem'
-  task :binary => [:compile] do
+  task :binary => [:clean, :compile] do
     spec = eval(IO.read('krb5-auth.gemspec'))
     spec.platform = Gem::Platform::CURRENT
     spec.extensions = nil
@@ -57,14 +57,14 @@ end
 
 namespace 'test' do
   Rake::TestTask.new('all') do |t|
-    task :all => :compile
+    task :all => [:clean, :compile]
     t.libs << 'ext' 
     t.warning = true
     t.verbose = true
   end
 
   Rake::TestTask.new('context') do |t|
-    task :context => :compile
+    task :context => [:clean, :compile]
     t.libs << 'ext' 
     t.test_files = FileList['test/test_context.rb']
     t.warning = true
@@ -72,7 +72,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('krb5') do |t|
-    task :krb5 => :compile
+    task :krb5 => [:clean, :compile]
     t.libs << 'ext' 
     t.test_files = FileList['test/test_krb5.rb']
     t.warning = true
@@ -80,7 +80,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('keytab') do |t|
-    task :keytab => :compile
+    task :keytab => [:clean, :compile]
     t.libs << 'ext' 
     t.test_files = FileList['test/test_krb5_keytab.rb']
     t.warning = true
@@ -88,7 +88,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('principal') do |t|
-    task :principal => :compile
+    task :principal => [:clean, :compile]
     t.libs << 'ext' 
     t.test_files = FileList['test/test_principal.rb']
     t.warning = true
@@ -96,7 +96,7 @@ namespace 'test' do
   end
 
   Rake::TestTask.new('kadm5') do |t|
-    task :kadm5 => :compile
+    task :kadm5 => [:clean, :compile]
     t.libs << 'ext' 
     t.test_files = FileList['test/test_kadm5.rb']
     t.warning = true
