@@ -2,7 +2,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name       = 'djberg96-krb5-auth'
-  spec.version    = '0.8.4'
+  spec.version    = '0.8.5'
   spec.author     = 'Daniel Berger'
   spec.license    = 'Artistic 2.0'
   spec.email      = 'djberg96@gmail.com'

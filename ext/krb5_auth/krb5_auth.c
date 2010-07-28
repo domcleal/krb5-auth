@@ -414,8 +414,8 @@ void Init_krb5_auth(){
   rb_define_alias(cKrb5, "default_realm", "get_default_realm");
   rb_define_alias(cKrb5, "default_principal", "get_default_principal");
 
-  /* 0.8.4: The version of the custom krb5_auth library */
-  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.4"));
+  /* 0.8.5: The version of the custom krb5_auth library */
+  rb_define_const(cKrb5, "VERSION", rb_str_new2("0.8.5"));
 
   /* 0x0000: None */
   rb_define_const(cKrb5, "ENCTYPE_NULL", INT2FIX(ENCTYPE_NULL));

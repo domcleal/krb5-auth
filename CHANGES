@@ -1,3 +1,9 @@
+= 0.8.5 - 28-Jul-2010
+* Fixed a bug where I had externs and variable declarations flip flopped
+  between the source and header files, which caused builds to fail on OS X.
+  Thanks go to Jeremy Hinegardner for the fix.
+* Updated the test tasks to always clean first.
+
 = 0.8.4 - 27-Jul-2010
 * Refactored the source code. Several kerberos components have been split
   into their own source files.
