@@ -29,49 +29,85 @@ static VALUE rkadm5_allocate(VALUE klass){
  * +admin_password+ arguments are an administrative account that must be
  * authenticated before any other admin methods can be used.
  */
-static VALUE rkadm5_initialize(VALUE self, VALUE v_user, VALUE v_pass){
+static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   RUBY_KADM5* ptr;
+  VALUE v_principal, v_password, v_keytab;
   char* user;
   char* pass;
+  char* keytab;
   krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
+  Check_Type(v_opts, T_HASH);
 
-  Check_Type(v_user, T_STRING);
-  Check_Type(v_pass, T_STRING);
+  // Look for 'principal' or :principal
+  v_principal = rb_hash_aref(v_opts, rb_str_new2("principal"));
+  if(NIL_P(v_principal)){
+    v_principal = rb_hash_aref(v_opts, ID2SYM(rb_intern("principal")));
+    if(NIL_P(v_principal))
+      rb_raise(rb_eArgError, "principal must be specified");
+  }
 
-  user = StringValuePtr(v_user);
-  pass = StringValuePtr(v_pass);
+  Check_Type(v_principal, T_STRING);
+  user = StringValuePtr(v_principal);
+
+  // Look for 'password' or :password
+  v_password = rb_hash_aref(v_opts, rb_str_new2("password"));
+  if(NIL_P(v_password))
+    v_password = rb_hash_aref(v_opts, ID2SYM(rb_intern("password")));
+
+  // Look for 'keytab' or :keytab
+  v_keytab = rb_hash_aref(v_opts, rb_str_new2("keytab"));
+  if(NIL_P(v_keytab))
+    v_keytab = rb_hash_aref(v_opts, ID2SYM(rb_intern("keytab")));
+
+  if(RTEST(v_password) && RTEST(v_keytab))
+    rb_raise(rb_eArgError, "cannot use both a password and a keytab");
+
+  if(RTEST(v_password))
+    Check_Type(v_password, T_STRING);
+
+  if(RTEST(v_keytab)){
+    if(TYPE(v_keytab) == T_TRUE){
+      keytab = NULL; // Default
+    }
+    else{
+      Check_Type(v_keytab, T_STRING);
+      pass = StringValuePtr(v_password);
+    }
+  }
 
   kerror = krb5_init_context(&ptr->ctx);
 
   if(kerror)
     rb_raise(cKadm5Exception, "krb5_init_context: %s", error_message(kerror));
 
+  if(RTEST(v_password)){
 #ifdef KADM5_API_VERSION_3
-  kerror = kadm5_init_with_password(
-    ptr->ctx,
-    user,
-    pass,
-    KADM5_ADMIN_SERVICE,
-    NULL,
-    KADM5_STRUCT_VERSION,
-    KADM5_API_VERSION_3,
-    NULL,
-    &ptr->handle
-  );
+    kerror = kadm5_init_with_password(
+      ptr->ctx,
+      user,
+      pass,
+      KADM5_ADMIN_SERVICE,
+      NULL,
+      KADM5_STRUCT_VERSION,
+      KADM5_API_VERSION_3,
+      NULL,
+      &ptr->handle
+    );
 #else
-  kerror = kadm5_init_with_password(
-    user,
-    pass,
-    KADM5_ADMIN_SERVICE,
-    NULL,
-    KADM5_STRUCT_VERSION,
-    KADM5_API_VERSION_2,
-    NULL,
-    &ptr->handle
-  );
+    kerror = kadm5_init_with_password(
+      user,
+      pass,
+      KADM5_ADMIN_SERVICE,
+      NULL,
+      KADM5_STRUCT_VERSION,
+      KADM5_API_VERSION_2,
+      NULL,
+      &ptr->handle
+    );
 #endif
+  }
 
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_init_with_password: %s", error_message(kerror));
@@ -288,7 +324,7 @@ void Init_kadm5(){
   cKadm5Exception = rb_define_class_under(cKadm5, "Exception", rb_eStandardError);
 
   rb_define_alloc_func(cKadm5, rkadm5_allocate);
-  rb_define_method(cKadm5, "initialize", rkadm5_initialize, 2);
+  rb_define_method(cKadm5, "initialize", rkadm5_initialize, 1);
 
   rb_define_method(cKadm5, "close", rkadm5_close, 0);
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
