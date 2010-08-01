@@ -107,10 +107,42 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       &ptr->handle
     );
 #endif
-  }
 
-  if(kerror)
-    rb_raise(cKadm5Exception, "kadm5_init_with_password: %s", error_message(kerror));
+    if(kerror)
+      rb_raise(cKadm5Exception, "kadm5_init_with_password: %s", error_message(kerror));
+  }
+  else if(RTEST(v_keytab)){
+#ifdef KADM5_API_VERSION_3
+    kerror = kadm5_init_with_skey(
+      ptr->ctx,
+      user,
+      keytab,
+      KADM5_ADMIN_SERVICE,
+      NULL,
+      KADM5_STRUCT_VERSION,
+      KADM5_API_VERSION_3,
+      NULL,
+      &ptr->handle
+    );
+#else
+    kerror = kadm5_init_with_skey(
+      user,
+      keytab,
+      KADM5_ADMIN_SERVICE,
+      NULL,
+      KADM5_STRUCT_VERSION,
+      KADM5_API_VERSION_3,
+      NULL,
+      &ptr->handle
+    );
+#endif
+
+    if(kerror)
+      rb_raise(cKadm5Exception, "kadm5_init_with_skey: %s", error_message(kerror));
+  }
+  else{
+    // TODO: Credentials cache.
+  }
 
   return self;
 }
