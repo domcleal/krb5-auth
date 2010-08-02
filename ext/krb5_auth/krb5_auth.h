@@ -9,6 +9,8 @@
 #include <kadm5/admin.h>
 #endif
 
+static VALUE rb_hash_aref2(VALUE, char*);
+
 VALUE mKerberos;
 VALUE cKrb5;
 VALUE cKrb5Context;
@@ -59,5 +61,21 @@ typedef struct {
 typedef struct {
   krb5_principal principal;
 } RUBY_KRB5_PRINC;
+
+#ifndef __RB_HASH_AREF2__
+#define __RB_HASH_AREF2__
+// Get a hash value by string or symbol.
+static VALUE rb_hash_aref2(VALUE v_hash, char* key){
+  VALUE v_key, v_value;
+
+  v_key = rb_str_new2(key);
+  v_value = rb_hash_aref(v_hash, v_key); 
+
+  if(NIL_P(v_value))
+    v_value = rb_hash_aref(v_hash, ID2SYM(rb_intern(key)));
+
+  return v_value;
+}
+#endif
 
 #endif

@@ -23,11 +23,20 @@ static VALUE rkadm5_allocate(VALUE klass){
 
 /*
  * call-seq:
- *   Krb5Auth::Kadm5.new(admin_user, admin_password)
+ *   Krb5Auth::Kadm5.new(:principal => 'name', :password => 'xxxxx')
+ *   Krb5Auth::Kadm5.new(:principal => 'name', :keytab => '/path/to/your/keytab')
+ *   Krb5Auth::Kadm5.new(:principal => 'name', :keytab => true)
  *
- * Creates and returns a new Krb5Auth::Kadm5 object. The +admin_user+ and
- * +admin_password+ arguments are an administrative account that must be
- * authenticated before any other admin methods can be used.
+ * Creates and returns a new Krb5Auth::Kadm5 object. A hash argument is
+ * accepted that allows you to specify a principal and a password, or
+ * a keytab file.
+ *
+ * If you pass a string as the :keytab value it will attempt to use that file
+ * for the keytab. If you pass true as the value it will attempt to use the
+ * default keytab file, typically /etc/krb5.keytab.
+ *
+ * You may also pass the :service option to specify the service name. The
+ * default is kadmin/admin.
  */
 static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   RUBY_KADM5* ptr;
@@ -41,26 +50,17 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   Data_Get_Struct(self, RUBY_KADM5, ptr);
   Check_Type(v_opts, T_HASH);
 
-  // Look for 'principal' or :principal
-  v_principal = rb_hash_aref(v_opts, rb_str_new2("principal"));
-  if(NIL_P(v_principal)){
-    v_principal = rb_hash_aref(v_opts, ID2SYM(rb_intern("principal")));
-    if(NIL_P(v_principal))
-      rb_raise(rb_eArgError, "principal must be specified");
-  }
+  v_principal = rb_hash_aref2(v_opts, "principal");
+
+  // Principal must be specified
+  if(NIL_P(v_principal))
+    rb_raise(rb_eArgError, "principal must be specified");
 
   Check_Type(v_principal, T_STRING);
   user = StringValuePtr(v_principal);
 
-  // Look for 'password' or :password
-  v_password = rb_hash_aref(v_opts, rb_str_new2("password"));
-  if(NIL_P(v_password))
-    v_password = rb_hash_aref(v_opts, ID2SYM(rb_intern("password")));
-
-  // Look for 'keytab' or :keytab
-  v_keytab = rb_hash_aref(v_opts, rb_str_new2("keytab"));
-  if(NIL_P(v_keytab))
-    v_keytab = rb_hash_aref(v_opts, ID2SYM(rb_intern("keytab")));
+  v_password = rb_hash_aref2(v_opts, "password");
+  v_keytab = rb_hash_aref2(v_opts, "keytab");
 
   if(RTEST(v_password) && RTEST(v_keytab))
     rb_raise(rb_eArgError, "cannot use both a password and a keytab");
@@ -70,10 +70,7 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     pass = StringValuePtr(v_password);
   }
 
-  // Look for 'service' or :service
-  v_service = rb_hash_aref(v_opts, rb_str_new2("service"));
-  if(NIL_P(v_service))
-    v_service = rb_hash_aref(v_opts, ID2SYM(rb_intern("service")));
+  v_service = rb_hash_aref2(v_opts, "service");
 
   if(NIL_P(v_service)){
     service = "kadmin/admin";
@@ -107,7 +104,6 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       keytab = StringValuePtr(v_keytab);
     }
   }
-
 
   if(RTEST(v_password)){
 #ifdef KADM5_API_VERSION_3
