@@ -142,7 +142,6 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       ptr->ctx,
       user,
       keytab,
-      //KADM5_ADMIN_SERVICE,
       service,
       NULL,
       KADM5_STRUCT_VERSION,
@@ -154,11 +153,10 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     kerror = kadm5_init_with_skey(
       user,
       keytab,
-      //KADM5_ADMIN_SERVICE,
       service,
       NULL,
       KADM5_STRUCT_VERSION,
-      KADM5_API_VERSION_3,
+      KADM5_API_VERSION_2,
       NULL,
       &ptr->handle
     );
