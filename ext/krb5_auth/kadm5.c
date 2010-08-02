@@ -31,10 +31,11 @@ static VALUE rkadm5_allocate(VALUE klass){
  */
 static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   RUBY_KADM5* ptr;
-  VALUE v_principal, v_password, v_keytab;
+  VALUE v_principal, v_password, v_keytab, v_service;
   char* user;
   char* pass;
   char* keytab;
+  char* service;
   krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
@@ -64,23 +65,49 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   if(RTEST(v_password) && RTEST(v_keytab))
     rb_raise(rb_eArgError, "cannot use both a password and a keytab");
 
-  if(RTEST(v_password))
+  if(RTEST(v_password)){
     Check_Type(v_password, T_STRING);
-
-  if(RTEST(v_keytab)){
-    if(TYPE(v_keytab) == T_TRUE){
-      keytab = NULL; // Default
-    }
-    else{
-      Check_Type(v_keytab, T_STRING);
-      pass = StringValuePtr(v_password);
-    }
+    pass = StringValuePtr(v_password);
   }
 
+  // Look for 'service' or :service
+  v_service = rb_hash_aref(v_opts, rb_str_new2("service"));
+  if(NIL_P(v_service))
+    v_service = rb_hash_aref(v_opts, ID2SYM(rb_intern("service")));
+
+  if(NIL_P(v_service)){
+    service = "kadmin/admin";
+  }
+  else{
+    Check_Type(v_service, T_STRING);
+    service = StringValuePtr(v_service);
+  }
+
+  // Normally I would wait to initialize the context, but we might need it
+  // to get the default keytab file name.
   kerror = krb5_init_context(&ptr->ctx);
 
   if(kerror)
     rb_raise(cKadm5Exception, "krb5_init_context: %s", error_message(kerror));
+
+  // The docs say I can use NULL to get the default, but reality appears to be otherwise.
+  if(RTEST(v_keytab)){
+    if(TYPE(v_keytab) == T_TRUE){
+      char default_name[MAX_KEYTAB_NAME_LEN];
+
+      kerror = krb5_kt_default_name(ptr->ctx, default_name, MAX_KEYTAB_NAME_LEN);
+
+      if(kerror)
+        rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
+
+      keytab = default_name;
+    }
+    else{
+      Check_Type(v_keytab, T_STRING);
+      keytab = StringValuePtr(v_keytab);
+    }
+  }
+
 
   if(RTEST(v_password)){
 #ifdef KADM5_API_VERSION_3
@@ -88,7 +115,8 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       ptr->ctx,
       user,
       pass,
-      KADM5_ADMIN_SERVICE,
+      //KADM5_ADMIN_SERVICE,
+      service,
       NULL,
       KADM5_STRUCT_VERSION,
       KADM5_API_VERSION_3,
@@ -99,7 +127,8 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     kerror = kadm5_init_with_password(
       user,
       pass,
-      KADM5_ADMIN_SERVICE,
+      //KADM5_ADMIN_SERVICE,
+      service,
       NULL,
       KADM5_STRUCT_VERSION,
       KADM5_API_VERSION_2,
@@ -117,7 +146,8 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       ptr->ctx,
       user,
       keytab,
-      KADM5_ADMIN_SERVICE,
+      //KADM5_ADMIN_SERVICE,
+      service,
       NULL,
       KADM5_STRUCT_VERSION,
       KADM5_API_VERSION_3,
@@ -128,7 +158,8 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     kerror = kadm5_init_with_skey(
       user,
       keytab,
-      KADM5_ADMIN_SERVICE,
+      //KADM5_ADMIN_SERVICE,
+      service,
       NULL,
       KADM5_STRUCT_VERSION,
       KADM5_API_VERSION_3,
