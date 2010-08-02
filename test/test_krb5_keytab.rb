@@ -16,7 +16,7 @@ require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@file = '/etc/krb5.keytab'
+    @@file = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
   end
 
   def setup
