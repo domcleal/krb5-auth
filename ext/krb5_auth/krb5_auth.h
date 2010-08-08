@@ -9,8 +9,16 @@
 #include <kadm5/admin.h>
 #endif
 
+// Function Prototypes
+void Init_context();
+void Init_kadm5();
+void Init_principal();
+void Init_keytab();
+void Init_keytab_entry();
+
 static VALUE rb_hash_aref2(VALUE, char*);
 
+// Variable declarations
 VALUE mKerberos;
 VALUE cKrb5;
 VALUE cKrb5Context;
