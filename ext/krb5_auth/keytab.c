@@ -317,7 +317,6 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
  * If no +keytab+ is provided, then the default keytab is used.
  */
 static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
-  RUBY_KRB5_KEYTAB* ptr;
   VALUE v_kt_entry;
   VALUE v_keytab_name;
   VALUE v_args[0];
