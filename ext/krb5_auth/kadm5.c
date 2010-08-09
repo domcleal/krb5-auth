@@ -42,9 +42,9 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   RUBY_KADM5* ptr;
   VALUE v_principal, v_password, v_keytab, v_service;
   char* user;
-  char* pass;
-  char* keytab;
-  char* service;
+  char* pass = NULL;
+  char* keytab = NULL;
+  char* service = NULL;
   krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
