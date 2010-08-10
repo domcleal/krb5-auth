@@ -13,12 +13,20 @@ gem 'test-unit'
 require 'test/unit'
 require 'dbi/dbrc'
 require 'krb5_auth'
+require 'socket'
 
 class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   def self.startup
     @@default_keytab = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
     @@info = DBI::DBRC.new('test-kerberos')
+    @@host = Socket.gethostname
+
     ENV['KRB5_CONFIG'] = @@info.driver || ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
+    @@server = IO.read(ENV['KRB5_CONFIG']).grep(/admin_server/i)
+
+    if @@server
+      @@server = @@server.first.split('=').last.split('.').first.lstrip.chomp
+    end
   end
 
   def setup
@@ -27,6 +35,17 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     @kadm = nil
     @struct = nil
     @test_princ = "zztop"
+
+    if File.exists?(@@default_keytab)
+      @keytab = @@default_keytab.dup
+    else
+      @keytab = IO.read(@@krb5_conf).grep(/default_keytab_name/)
+      if @keytab
+        @keytab = @keytab.first.split('=').last.lstrip.chomp.split(':').last
+      else
+        @keytab = '/etc/krb5.keytab'
+      end
+    end
   end
 
   test "constructor basic functionality" do
@@ -44,8 +63,15 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   end
 
   test "constructor with valid user and default keytab works as expected" do
-    omit_unless(@@default_keytab, "default keytab file not found")
+    omit_unless(@@host == @@server, "keytab on different host, skipping")
+    omit_unless(File.exists?(@@default_keytab), "default keytab file '#{@@default_keytab}' not found")
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => true) }
+  end
+
+  test "constructor with valid user and explicit keytab works as expected" do
+    omit_unless(@@host == @@server, "keytab on different host, skipping")
+    omit_unless(File.exists?(@@default_keytab), "keytab file '#{@keytab}' not found")
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => @keytab) }
   end
 
   test "constructor only accepts a hash" do
