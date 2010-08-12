@@ -2,6 +2,7 @@
 
 extern VALUE mKerberos;
 extern VALUE cKrb5;
+extern VALUE cKrb5CCache;
 extern VALUE cKrb5Context;
 extern VALUE cKrb5Keytab;
 extern VALUE cKrb5KtEntry;

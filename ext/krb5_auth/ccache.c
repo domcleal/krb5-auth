@@ -75,6 +75,8 @@ static VALUE rkrb5_ccache_initialize(VALUE self, VALUE v_principal){
  *   
  * Closes the ccache object. Once the ccache object is closed no more
  * methods may be called on it, or an exception will be raised.
+ *
+ * Note that unlike ccache.destroy, this does not delete the cache.
  */
 static VALUE rkrb5_ccache_close(VALUE self){
   RUBY_KRB5_CCACHE* ptr;
@@ -82,7 +84,7 @@ static VALUE rkrb5_ccache_close(VALUE self){
   Data_Get_Struct(self, RUBY_KRB5_CCACHE, ptr);
 
   if(!ptr->ctx)
-    return;
+    return self;
 
   if(ptr->ccache)
     krb5_cc_close(ptr->ctx, ptr->ccache);
@@ -138,6 +140,16 @@ static VALUE rkrb5_ccache_destroy(VALUE self){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_cc_destroy: %s", error_message(kerror));
 
+  if(ptr->principal)
+    krb5_free_principal(ptr->ctx, ptr->principal);
+
+  if(ptr->ctx)
+    krb5_free_context(ptr->ctx);
+
+  ptr->ccache = NULL;
+  ptr->ctx = NULL;
+  ptr->principal = NULL;
+
   return self;
 }
 
@@ -155,4 +167,7 @@ void Init_ccache(){
   rb_define_method(cKrb5CCache, "close", rkrb5_ccache_close, 0);
   rb_define_method(cKrb5CCache, "default_name", rkrb5_ccache_default_name, 0);
   rb_define_method(cKrb5CCache, "destroy", rkrb5_ccache_destroy, 0);
+
+  // Aliases
+  rb_define_alias(cKrb5CCache, "delete", "destroy");
 }
