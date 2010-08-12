@@ -15,6 +15,7 @@ void Init_kadm5();
 void Init_principal();
 void Init_keytab();
 void Init_keytab_entry();
+void Init_ccache();
 
 static VALUE rb_hash_aref2(VALUE, char*);
 
@@ -28,6 +29,7 @@ VALUE cKrb5Exception;
 VALUE cKrb5Principal;
 VALUE cKadm5;
 VALUE cKadm5Exception;
+VALUE cKrb5CCache;
 VALUE sPrincipalStruct;
 
 // Krb5Auth::Krb5
@@ -69,6 +71,12 @@ typedef struct {
 typedef struct {
   krb5_principal principal;
 } RUBY_KRB5_PRINC;
+
+typedef struct {
+  krb5_context ctx;
+  krb5_ccache ccache;
+  krb5_principal principal;
+} RUBY_KRB5_CCACHE;
 
 #ifndef __RB_HASH_AREF2__
 #define __RB_HASH_AREF2__

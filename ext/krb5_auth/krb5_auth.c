@@ -483,6 +483,7 @@ void Init_krb5_auth(){
   // Class initialization
 
   Init_context();
+  Init_ccache();
   Init_kadm5();
   Init_principal();
   Init_keytab();

@@ -71,6 +71,14 @@ namespace 'test' do
     t.verbose = true
   end
 
+  Rake::TestTask.new('ccache') do |t|
+    task :ccache => [:clean, :compile]
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_credentials_cache.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
   Rake::TestTask.new('krb5') do |t|
     task :krb5 => [:clean, :compile]
     t.libs << 'ext' 
