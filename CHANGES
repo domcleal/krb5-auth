@@ -1,3 +1,12 @@
+= 0.9.0 - ???
+* Refactored the Krb5Auth::Krb5 constructor so that it accepts a hash of
+  options instead of merely a principal and password. The possible options
+  are :principal, :password, :service, and :keytab. This change breaks
+  backwards compatibility with 0.8.x.
+* Added the initial underpinnings for a CredentialsCache object along with
+  a preliminary set of tests. It's still in an alpha stage, so it is not
+  recommended for production use at this time.
+
 = 0.8.5 - 28-Jul-2010
 * Fixed a bug where I had externs and variable declarations flip flopped
   between the source and header files, which caused builds to fail on OS X.
