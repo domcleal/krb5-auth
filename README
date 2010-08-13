@@ -16,6 +16,10 @@
   puts keytab.default_name
   keytab.close
 
+  kadm5 = Krb5Auth::Kadm5.new(:principal => 'foo/admin', :password => 'xxxx')
+  kadm5.set_password('someuser', 'abc123')
+  kadm5.close
+
 = Notes
   This fork heavily modifies the original krb5_auth library. Several new
   classes and methods have been added.
@@ -23,6 +27,7 @@
   Krb5Auth::Kadm5
   Krb5Auth::Krb5::Keytab
   Krb5Auth::Krb5::KeytabEntry
+  Krb5Auth::Krb5::CredentialsCache
   Struct::Principal
 
   With this fork you can create and delete principals, set and reset passwords,

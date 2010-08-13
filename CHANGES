@@ -1,5 +1,5 @@
 = 0.9.0 - ???
-* Refactored the Krb5Auth::Krb5 constructor so that it accepts a hash of
+* Refactored the Krb5Auth::Kadm5 constructor so that it accepts a hash of
   options instead of merely a principal and password. The possible options
   are :principal, :password, :service, and :keytab. This change breaks
   backwards compatibility with 0.8.x.
