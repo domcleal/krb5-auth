@@ -119,6 +119,15 @@ class TC_Krb5_Principal < Test::Unit::TestCase
     assert_equal("TEST.REALM", @princ.realm)
   end
 
+  test "equality basic functionality" do
+    assert_respond_to(@princ, :==)
+  end
+
+  test "equality works as expected" do
+    assert_true(@princ == @princ)
+    assert_false(@princ == Krb5Auth::Krb5::Principal.new('other'))
+  end
+
   def teardown
     @princ = nil
   end

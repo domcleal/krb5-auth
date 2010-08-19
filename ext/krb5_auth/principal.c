@@ -91,6 +91,26 @@ static VALUE rkrb5_princ_set_realm(VALUE self, VALUE v_realm){
   return v_realm;
 }
 
+/*
+ * call-seq:
+ *   principal1 == principal2
+ *
+ * Returns whether or not two principals are the same.
+ */
+static VALUE rkrb5_princ_equal(VALUE self, VALUE v_other){
+  RUBY_KRB5_PRINC* ptr1;
+  RUBY_KRB5_PRINC* ptr2;
+  VALUE v_bool = Qfalse;
+
+  Data_Get_Struct(self, RUBY_KRB5_PRINC, ptr1); 
+  Data_Get_Struct(v_other, RUBY_KRB5_PRINC, ptr2); 
+
+  if(krb5_principal_compare(ptr1->ctx, ptr1->principal, ptr2->principal))
+    v_bool = Qtrue;
+
+  return v_bool;
+}
+
 void Init_principal(){
   /* The Krb5Auth::Krb5::Principal class encapsulates a Kerberos principal. */
   cKrb5Principal = rb_define_class_under(cKrb5, "Principal", rb_cObject);
@@ -104,6 +124,7 @@ void Init_principal(){
   // Instance Methods
   rb_define_method(cKrb5Principal, "realm", rkrb5_princ_get_realm, 0);
   rb_define_method(cKrb5Principal, "realm=", rkrb5_princ_set_realm, 1);
+  rb_define_method(cKrb5Principal, "==", rkrb5_princ_equal, 1);
 
   // Attributes
   rb_define_attr(cKrb5Principal, "name", 1, 0);
