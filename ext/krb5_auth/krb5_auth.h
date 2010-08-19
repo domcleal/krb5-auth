@@ -69,6 +69,7 @@ typedef struct {
 } RUBY_KRB5_KEYTAB;
 
 typedef struct {
+  krb5_context ctx;
   krb5_principal principal;
 } RUBY_KRB5_PRINC;
 

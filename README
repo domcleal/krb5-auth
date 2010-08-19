@@ -39,6 +39,10 @@
 
   Lastly, this fork includes many more tests.
 
+= MIT vs Heimdal
+  This code was written for the MIT Kerberos library. It has not been tested
+  with the Heimdal Kerberos library.
+
 = TODO
   Replace Struct::Principal with a Principal class with its own methods.
   Create separate classes for the credentials cache and replay cache.

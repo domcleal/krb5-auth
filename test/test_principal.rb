@@ -12,12 +12,22 @@ require 'krb5_auth'
 
 class TC_Krb5_Principal < Test::Unit::TestCase
   def setup
-    @princ = Krb5Auth::Krb5::Principal.new
+    @name  = 'Jon'
+    @princ = Krb5Auth::Krb5::Principal.new(@name)
+  end
+
+  test "argument to constructor must be a string" do
+    assert_raise(TypeError){ Krb5Auth::Krb5::Principal.new(1) }
+    assert_raise(TypeError){ Krb5Auth::Krb5::Principal.new(true) }
   end
 
   test "name basic functionality" do
     assert_respond_to(@princ, :name)
     assert_nothing_raised{ @princ.name }
+  end
+
+  test "name returns expected results" do
+    assert_equal('Jon', @princ.name)
   end
 
   test "expire_time basic functionality" do
@@ -83,6 +93,30 @@ class TC_Krb5_Principal < Test::Unit::TestCase
   test "fail_auth_count basic functionality" do
     assert_respond_to(@princ, :fail_auth_count)
     assert_nothing_raised{ @princ.fail_auth_count }
+  end
+
+  test "constructor accepts a name" do
+    assert_nothing_raised{ Krb5Auth::Krb5::Principal.new('delete_me') }
+  end
+
+  test "passing a name to the constructor sets the instance variable" do
+    assert_nothing_raised{ @princ = Krb5Auth::Krb5::Principal.new('delete_me') }
+    assert_equal('delete_me', @princ.name)
+  end
+
+  test "get realm basic functionality" do
+    assert_respond_to(@princ, :realm)
+    assert_nothing_raised{ @princ.realm }
+    assert_kind_of(String, @princ.realm)
+  end
+
+  test "set realm basic functionality" do
+    assert_respond_to(@princ, :realm=)
+  end
+
+  test "set realm works as expected" do
+    assert_nothing_raised{ @princ.realm = "TEST.REALM" }
+    assert_equal("TEST.REALM", @princ.realm)
   end
 
   def teardown
