@@ -5,6 +5,12 @@ static void rkrb5_princ_free(RUBY_KRB5_PRINC* ptr){
   if(!ptr)
     return;
 
+  if(ptr->principal)
+    krb5_free_principal(ptr->ctx, ptr->principal);
+
+  if(ptr->ctx)
+    krb5_free_context(ptr->ctx);
+
   free(ptr);
 }
 
