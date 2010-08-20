@@ -12,6 +12,7 @@
 // Function Prototypes
 void Init_context();
 void Init_kadm5();
+void Init_config();
 void Init_principal();
 void Init_keytab();
 void Init_keytab_entry();
@@ -28,6 +29,7 @@ VALUE cKrb5KtEntry;
 VALUE cKrb5Exception;
 VALUE cKrb5Principal;
 VALUE cKadm5;
+VALUE cKadm5Config;
 VALUE cKadm5Exception;
 VALUE cKrb5CCache;
 VALUE sPrincipalStruct;
@@ -78,6 +80,11 @@ typedef struct {
   krb5_ccache ccache;
   krb5_principal principal;
 } RUBY_KRB5_CCACHE;
+
+typedef struct {
+  krb5_context ctx;
+  kadm5_config_params config;
+} RUBY_KADM5_CONFIG;
 
 #ifndef __RB_HASH_AREF2__
 #define __RB_HASH_AREF2__

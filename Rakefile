@@ -110,6 +110,14 @@ namespace 'test' do
     t.warning = true
     t.verbose = true
   end
+
+  Rake::TestTask.new('config') do |t|
+    task :config => [:clean, :compile]
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_config.rb']
+    t.warning = true
+    t.verbose = true
+  end
 end
 
 task :default => ['test:all']

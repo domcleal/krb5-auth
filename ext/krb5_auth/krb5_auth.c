@@ -8,6 +8,7 @@ extern VALUE cKrb5Keytab;
 extern VALUE cKrb5KtEntry;
 extern VALUE cKrb5Exception;
 extern VALUE cKadm5Exception;
+extern VALUE cKadm5Config;
 extern VALUE sPrincipalStruct;
 
 // Free function for the Krb5Auth::Krb5 class.
@@ -486,6 +487,7 @@ void Init_krb5_auth(){
   Init_context();
   Init_ccache();
   Init_kadm5();
+  Init_config();
   Init_principal();
   Init_keytab();
   Init_keytab_entry();
