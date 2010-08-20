@@ -14,6 +14,11 @@ class TC_Kadm5_Config < Test::Unit::TestCase
     @config = Krb5Auth::Kadm5::Config.new
   end
 
+  test "config object is frozen" do
+    assert_true(@config.frozen?)
+    p @config
+  end
+
   test "realm basic functionality" do
     assert_respond_to(@config, :realm)
     assert_kind_of(String, @config.realm)
@@ -107,6 +112,16 @@ class TC_Kadm5_Config < Test::Unit::TestCase
   test "iprop_port basic functionality" do
     assert_respond_to(@config, :iprop_port)
     assert_kind_of([Fixnum, NilClass], @config.iprop_port)
+  end
+
+  test "num_keysalts basic functionality" do
+    assert_respond_to(@config, :num_keysalts)
+    assert_kind_of(Fixnum, @config.num_keysalts)
+  end
+
+  test "keysalts basic functionality" do
+    assert_respond_to(@config, :keysalts)
+    assert_kind_of(Fixnum, @config.keysalts)
   end
 
   def teardown

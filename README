@@ -25,6 +25,8 @@
   classes and methods have been added.
 
   Krb5Auth::Kadm5
+  Krb5Auth::Kadm5::Config
+  Krb5Auth::Kadm5::Realm
   Krb5Auth::Krb5::Keytab
   Krb5Auth::Krb5::KeytabEntry
   Krb5Auth::Krb5::CredentialsCache
@@ -45,7 +47,7 @@
 
 = TODO
   Replace Struct::Principal with a Principal class with its own methods.
-  Create separate classes for the credentials cache and replay cache.
+  Create a separate class for the replay cache.
 
 = CAVEATS
   OS X users will probably need to install Kerberos manually and specify
