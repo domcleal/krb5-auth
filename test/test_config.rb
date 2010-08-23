@@ -16,7 +16,6 @@ class TC_Kadm5_Config < Test::Unit::TestCase
 
   test "config object is frozen" do
     assert_true(@config.frozen?)
-    p @config
   end
 
   test "realm basic functionality" do

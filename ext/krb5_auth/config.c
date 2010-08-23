@@ -9,12 +9,11 @@ static void rkadm5_config_free(RUBY_KADM5_CONFIG* ptr){
   if(ptr->ctx)
     krb5_free_context(ptr->ctx);
 
-
   free(ptr);
 }
 
 // Allocation function for the Krb5Auth::Krb5 class.
-static VALUE rkadm5_allocate(VALUE klass){
+static VALUE rkadm5_config_allocate(VALUE klass){
   RUBY_KADM5_CONFIG* ptr = malloc(sizeof(RUBY_KADM5_CONFIG));
   memset(ptr, 0, sizeof(RUBY_KADM5_CONFIG));
   return Data_Wrap_Struct(klass, 0, rkadm5_config_free, ptr);
@@ -274,7 +273,7 @@ void Init_config(){
 
   // Allocation function
 
-  rb_define_alloc_func(cKadm5Config, rkadm5_allocate);
+  rb_define_alloc_func(cKadm5Config, rkadm5_config_allocate);
   
   // Initializer
 
