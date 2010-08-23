@@ -47,7 +47,10 @@ static VALUE rkrb5_princ_initialize(VALUE self, VALUE v_name){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context failed: %s", error_message(kerror));
 
-  if(!NIL_P(v_name)){
+  if(NIL_P(v_name)){
+    rb_iv_set(self, "@name", Qnil);
+  }
+  else{
     char* name;
     Check_Type(v_name, T_STRING);
     name = StringValuePtr(v_name);
@@ -58,6 +61,20 @@ static VALUE rkrb5_princ_initialize(VALUE self, VALUE v_name){
 
     rb_iv_set(self, "@name", v_name);
   }
+
+  rb_iv_set(self, "@attributes", Qnil);
+  rb_iv_set(self, "@expire_time", Qnil);
+  rb_iv_set(self, "@fail_auth_count", Qnil);
+  rb_iv_set(self, "@last_failed", Qnil);
+  rb_iv_set(self, "@last_password_change", Qnil);
+  rb_iv_set(self, "@last_success", Qnil);
+  rb_iv_set(self, "@max_life", Qnil); 
+  rb_iv_set(self, "@max_renewable_life", Qnil); 
+  rb_iv_set(self, "@mod_date", Qnil);
+  rb_iv_set(self, "@mod_name", Qnil);
+  rb_iv_set(self, "@password_expiration", Qnil);
+  rb_iv_set(self, "@policy", Qnil);
+  rb_iv_set(self, "@vno", Qnil);
 
   if(rb_block_given_p())
     rb_yield(self);
@@ -86,8 +103,10 @@ static VALUE rkrb5_princ_get_realm(VALUE self){
  */
 static VALUE rkrb5_princ_set_realm(VALUE self, VALUE v_realm){
   RUBY_KRB5_PRINC* ptr;
-  Data_Get_Struct(self, RUBY_KRB5_PRINC, ptr); 
   krb5_data kdata;
+
+  memset(&kdata, 0, sizeof(kdata));
+  Data_Get_Struct(self, RUBY_KRB5_PRINC, ptr); 
 
   Check_Type(v_realm, T_STRING);
   kdata.data = StringValuePtr(v_realm);
@@ -117,34 +136,116 @@ static VALUE rkrb5_princ_equal(VALUE self, VALUE v_other){
   return v_bool;
 }
 
+/* 
+ * call-seq:
+ *   principal.inspect
+ *
+ * A custom inspect method for the Principal object.
+ */
+static VALUE rkrb5_princ_inspect(VALUE self){
+  RUBY_KRB5_PRINC* ptr;
+  VALUE v_str;
+
+  Data_Get_Struct(self, RUBY_KRB5_PRINC, ptr); 
+
+  v_str = rb_str_buf_new2("#<");
+  rb_str_buf_cat2(v_str, rb_obj_classname(self));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "attributes=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@attributes")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "expire_time=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@expire_time")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "fail_auth_count=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@fail_auth_count")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "last_failed=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@last_failed")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "last_password_change=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@last_password_change")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "last_success=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@last_success")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "max_life=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@max_life")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "max_renewable_life=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@max_renewable_life")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "mod_date=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@mod_date")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "mod_name=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@mod_name")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "name=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@name")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "password_expiration=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@password_expiration")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "policy=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@policy")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "vno=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@vno")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, ">");
+
+  return v_str;
+}
+
 void Init_principal(){
   /* The Krb5Auth::Krb5::Principal class encapsulates a Kerberos principal. */
   cKrb5Principal = rb_define_class_under(cKrb5, "Principal", rb_cObject);
 
   // Allocation Function
+
   rb_define_alloc_func(cKrb5Principal, rkrb5_princ_allocate);
 
   // Constructor
+
   rb_define_method(cKrb5Principal, "initialize", rkrb5_princ_initialize, 1);
 
   // Instance Methods
+
+  rb_define_method(cKrb5Principal, "inspect", rkrb5_princ_inspect, 0);
   rb_define_method(cKrb5Principal, "realm", rkrb5_princ_get_realm, 0);
   rb_define_method(cKrb5Principal, "realm=", rkrb5_princ_set_realm, 1);
   rb_define_method(cKrb5Principal, "==", rkrb5_princ_equal, 1);
 
   // Attributes
-  rb_define_attr(cKrb5Principal, "name", 1, 0);
-  rb_define_attr(cKrb5Principal, "expire_time", 1, 1);
-  rb_define_attr(cKrb5Principal, "last_password_change", 1, 1);
-  rb_define_attr(cKrb5Principal, "password_expiration", 1, 1);
-  rb_define_attr(cKrb5Principal, "max_life", 1, 1);
-  rb_define_attr(cKrb5Principal, "mod_name", 1, 1);
-  rb_define_attr(cKrb5Principal, "mod_date", 1, 1);
+
   rb_define_attr(cKrb5Principal, "attributes", 1, 1);
-  rb_define_attr(cKrb5Principal, "vno", 1, 1);
-  rb_define_attr(cKrb5Principal, "policy", 1, 1);
-  rb_define_attr(cKrb5Principal, "max_renewable_life", 1, 1);
-  rb_define_attr(cKrb5Principal, "last_success", 1, 1);
-  rb_define_attr(cKrb5Principal, "last_failed", 1, 1);
+  rb_define_attr(cKrb5Principal, "expire_time", 1, 1);
   rb_define_attr(cKrb5Principal, "fail_auth_count", 1, 1);
+  rb_define_attr(cKrb5Principal, "last_failed", 1, 1);
+  rb_define_attr(cKrb5Principal, "last_password_change", 1, 1);
+  rb_define_attr(cKrb5Principal, "last_success", 1, 1);
+  rb_define_attr(cKrb5Principal, "max_life", 1, 1);
+  rb_define_attr(cKrb5Principal, "max_renewable_life", 1, 1);
+  rb_define_attr(cKrb5Principal, "mod_date", 1, 1);
+  rb_define_attr(cKrb5Principal, "mod_name", 1, 1);
+  rb_define_attr(cKrb5Principal, "name", 1, 0);
+  rb_define_attr(cKrb5Principal, "password_expiration", 1, 1);
+  rb_define_attr(cKrb5Principal, "policy", 1, 1);
+  rb_define_attr(cKrb5Principal, "vno", 1, 1);
 }
