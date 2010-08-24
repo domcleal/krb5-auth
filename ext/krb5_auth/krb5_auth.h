@@ -13,6 +13,7 @@
 void Init_context();
 void Init_kadm5();
 void Init_config();
+void Init_policy();
 void Init_principal();
 void Init_keytab();
 void Init_keytab_entry();
@@ -23,6 +24,7 @@ static VALUE rb_hash_aref2(VALUE, char*);
 // Variable declarations
 VALUE mKerberos;
 VALUE cKrb5;
+VALUE cKrb5CCache;
 VALUE cKrb5Context;
 VALUE cKrb5Keytab;
 VALUE cKrb5KtEntry;
@@ -31,8 +33,7 @@ VALUE cKrb5Principal;
 VALUE cKadm5;
 VALUE cKadm5Config;
 VALUE cKadm5Exception;
-VALUE cKrb5CCache;
-VALUE sPrincipalStruct;
+VALUE cKadm5Policy;
 
 // Krb5Auth::Krb5
 typedef struct {
@@ -85,6 +86,11 @@ typedef struct {
   krb5_context ctx;
   kadm5_config_params config;
 } RUBY_KADM5_CONFIG;
+
+typedef struct {
+  krb5_context ctx;
+  kadm5_policy_ent_rec policy;
+} RUBY_KADM5_POLICY;
 
 #ifndef __RB_HASH_AREF2__
 #define __RB_HASH_AREF2__

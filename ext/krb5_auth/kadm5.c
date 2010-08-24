@@ -206,7 +206,8 @@ static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
 
 /*
  * call-seq:
- *   kadm5.create_principal(name, password)
+ *   kadm5.create_principal(principal_name, password)
+ *   kadm5.create_principal(principal_object)
  *
  * Creates a new principal +name+ with an initial password of +password+.
  *
@@ -311,8 +312,8 @@ static VALUE rkadm5_close(VALUE self){
  * call-seq:
  *   kadm5.get_principal(principal_name)
  *
- * Returns a Struct::Principal object for +principal_name+ containing various
- * bits of information regarding that principal, such as policy, attributes,
+ * Returns a Principal object for +principal_name+ containing various bits
+ * of information regarding that principal, such as policy, attributes,
  * expiration information, etc.
  */
 static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){

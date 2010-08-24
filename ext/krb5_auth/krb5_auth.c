@@ -8,8 +8,10 @@ extern VALUE cKrb5Keytab;
 extern VALUE cKrb5KtEntry;
 extern VALUE cKrb5Exception;
 extern VALUE cKrb5Principal;
-extern VALUE cKadm5Exception;
+extern VALUE cKadm5;
 extern VALUE cKadm5Config;
+extern VALUE cKadm5Exception;
+extern VALUE cKadm5Policy;
 
 // Free function for the Krb5Auth::Krb5 class.
 static void rkrb5_free(RUBY_KRB5* ptr){
@@ -488,6 +490,7 @@ void Init_krb5_auth(){
   Init_ccache();
   Init_kadm5();
   Init_config();
+  Init_policy();
   Init_principal();
   Init_keytab();
   Init_keytab_entry();

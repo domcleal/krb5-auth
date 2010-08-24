@@ -118,6 +118,14 @@ namespace 'test' do
     t.warning = true
     t.verbose = true
   end
+
+  Rake::TestTask.new('policy') do |t|
+    task :policy => [:clean, :compile]
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_policy.rb']
+    t.warning = true
+    t.verbose = true
+  end
 end
 
 task :default => ['test:all']
