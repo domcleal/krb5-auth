@@ -26,11 +26,10 @@
 
   Krb5Auth::Kadm5
   Krb5Auth::Kadm5::Config
-  Krb5Auth::Kadm5::Realm
   Krb5Auth::Krb5::Keytab
   Krb5Auth::Krb5::KeytabEntry
   Krb5Auth::Krb5::CredentialsCache
-  Struct::Principal
+  Krb5Auth::Krb5::Principal
 
   With this fork you can create and delete principals, set and reset passwords,
   set the default realm, and read keytab entries.

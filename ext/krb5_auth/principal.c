@@ -48,7 +48,7 @@ static VALUE rkrb5_princ_initialize(VALUE self, VALUE v_name){
     rb_raise(cKrb5Exception, "krb5_init_context failed: %s", error_message(kerror));
 
   if(NIL_P(v_name)){
-    rb_iv_set(self, "@name", Qnil);
+    rb_iv_set(self, "@principal", Qnil);
   }
   else{
     char* name;
@@ -59,10 +59,11 @@ static VALUE rkrb5_princ_initialize(VALUE self, VALUE v_name){
     if(kerror)
       rb_raise(cKrb5Exception, "krb5_parse_name failed: %s", error_message(kerror));
 
-    rb_iv_set(self, "@name", v_name);
+    rb_iv_set(self, "@principal", v_name);
   }
 
   rb_iv_set(self, "@attributes", Qnil);
+  rb_iv_set(self, "@aux_attributes", Qnil);
   rb_iv_set(self, "@expire_time", Qnil);
   rb_iv_set(self, "@fail_auth_count", Qnil);
   rb_iv_set(self, "@last_failed", Qnil);
@@ -74,7 +75,7 @@ static VALUE rkrb5_princ_initialize(VALUE self, VALUE v_name){
   rb_iv_set(self, "@mod_name", Qnil);
   rb_iv_set(self, "@password_expiration", Qnil);
   rb_iv_set(self, "@policy", Qnil);
-  rb_iv_set(self, "@vno", Qnil);
+  rb_iv_set(self, "@kvno", Qnil);
 
   if(rb_block_given_p())
     rb_yield(self);
@@ -156,12 +157,20 @@ static VALUE rkrb5_princ_inspect(VALUE self){
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@attributes")));
   rb_str_buf_cat2(v_str, " ");
 
+  rb_str_buf_cat2(v_str, "aux_attributes=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@aux_attributes")));
+  rb_str_buf_cat2(v_str, " ");
+
   rb_str_buf_cat2(v_str, "expire_time=");
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@expire_time")));
   rb_str_buf_cat2(v_str, " ");
 
   rb_str_buf_cat2(v_str, "fail_auth_count=");
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@fail_auth_count")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "kvno=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@kvno")));
   rb_str_buf_cat2(v_str, " ");
 
   rb_str_buf_cat2(v_str, "last_failed=");
@@ -192,10 +201,6 @@ static VALUE rkrb5_princ_inspect(VALUE self){
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@mod_name")));
   rb_str_buf_cat2(v_str, " ");
 
-  rb_str_buf_cat2(v_str, "name=");
-  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@name")));
-  rb_str_buf_cat2(v_str, " ");
-
   rb_str_buf_cat2(v_str, "password_expiration=");
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@password_expiration")));
   rb_str_buf_cat2(v_str, " ");
@@ -204,8 +209,8 @@ static VALUE rkrb5_princ_inspect(VALUE self){
   rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@policy")));
   rb_str_buf_cat2(v_str, " ");
 
-  rb_str_buf_cat2(v_str, "vno=");
-  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@vno")));
+  rb_str_buf_cat2(v_str, "principal=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@principal")));
   rb_str_buf_cat2(v_str, " ");
 
   rb_str_buf_cat2(v_str, ">");
@@ -235,8 +240,10 @@ void Init_principal(){
   // Attributes
 
   rb_define_attr(cKrb5Principal, "attributes", 1, 1);
+  rb_define_attr(cKrb5Principal, "aux_attributes", 1, 1);
   rb_define_attr(cKrb5Principal, "expire_time", 1, 1);
   rb_define_attr(cKrb5Principal, "fail_auth_count", 1, 1);
+  rb_define_attr(cKrb5Principal, "kvno", 1, 1);
   rb_define_attr(cKrb5Principal, "last_failed", 1, 1);
   rb_define_attr(cKrb5Principal, "last_password_change", 1, 1);
   rb_define_attr(cKrb5Principal, "last_success", 1, 1);
@@ -244,8 +251,11 @@ void Init_principal(){
   rb_define_attr(cKrb5Principal, "max_renewable_life", 1, 1);
   rb_define_attr(cKrb5Principal, "mod_date", 1, 1);
   rb_define_attr(cKrb5Principal, "mod_name", 1, 1);
-  rb_define_attr(cKrb5Principal, "name", 1, 0);
   rb_define_attr(cKrb5Principal, "password_expiration", 1, 1);
   rb_define_attr(cKrb5Principal, "policy", 1, 1);
-  rb_define_attr(cKrb5Principal, "vno", 1, 1);
+  rb_define_attr(cKrb5Principal, "principal", 1, 0);
+
+  // Aliases
+
+  rb_define_alias(cKrb5Principal, "name", "principal");
 }

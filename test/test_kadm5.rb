@@ -33,7 +33,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     @user = @@info.user
     @pass = @@info.passwd
     @kadm = nil
-    @struct = nil
+    @princ = nil
     @test_princ = "zztop"
 
     if File.exists?(@@default_keytab)
@@ -204,8 +204,9 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   test "get_principal returns a Struct::Principal object if found" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
     assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
-    assert_nothing_raised{ @struct = @kadm.get_principal(@test_princ) }
-    assert_kind_of(Struct::Principal, @struct)
+    assert_nothing_raised{ @princ = @kadm.get_principal(@test_princ) }
+    assert_kind_of(Krb5Auth::Krb5::Principal, @princ)
+    p @princ
   end
 
   test "get_principal raises an error if not found" do
@@ -222,25 +223,6 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
     assert_raise(ArgumentError){ @kadm.get_principal }
     assert_raise(ArgumentError){ @kadm.get_principal(@user, @user) }
-  end
-
-  test "principal struct members" do
-    @struct = Struct::Principal.new
-    assert_respond_to(@struct, :principal)
-    assert_respond_to(@struct, :princ_expire_time)
-    assert_respond_to(@struct, :last_pwd_change)
-    assert_respond_to(@struct, :pw_expiration)
-    assert_respond_to(@struct, :max_life)
-    assert_respond_to(@struct, :attributes)
-    assert_respond_to(@struct, :mod_name)
-    assert_respond_to(@struct, :mod_date)
-    assert_respond_to(@struct, :kvno)
-    assert_respond_to(@struct, :policy)
-    assert_respond_to(@struct, :aux_attributes)
-    assert_respond_to(@struct, :max_renewable_life)
-    assert_respond_to(@struct, :last_success)
-    assert_respond_to(@struct, :last_failed)
-    assert_respond_to(@struct, :fail_auth_count)
   end
 
   test "close basic functionality" do
@@ -275,10 +257,11 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
       @kadm.delete_principal(@test_princ) rescue nil
       @kadm.close
     end
-    @user   = nil
-    @pass   = nil
-    @kadm   = nil
-    @struct = nil
+
+    @user  = nil
+    @pass  = nil
+    @kadm  = nil
+    @princ = nil
   end
 
   def self.shutdown

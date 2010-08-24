@@ -209,6 +209,9 @@ static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
  *   kadm5.create_principal(name, password)
  *
  * Creates a new principal +name+ with an initial password of +password+.
+ *
+ *--
+ * TODO: Allow a Principal object to be passed in as an argument.
  */
 static VALUE rkadm5_create_principal(VALUE self, VALUE v_user, VALUE v_pass){
   RUBY_KADM5* ptr;
@@ -314,9 +317,9 @@ static VALUE rkadm5_close(VALUE self){
  */
 static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
-  VALUE v_struct;
+  VALUE v_principal;
+  VALUE v_args[1];
   char* user;
-  char* name;
   int mask;
   kadm5_principal_ent_rec ent;
   krb5_error_code kerror;
@@ -347,41 +350,65 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_get_principal: %s", error_message(kerror));
 
-  kerror = krb5_unparse_name(ptr->ctx, ent.mod_name, &name);
+  v_args[0] = v_user;
+  v_principal = rb_class_new_instance(1, v_args, cKrb5Principal);
 
-  if(kerror)
-    rb_raise(cKadm5Exception, "krb5_unparse_name: %s", error_message(kerror));
+  rb_iv_set(v_principal, "@attributes", LONG2FIX(ent.attributes));
+  rb_iv_set(v_principal, "@aux_attributes", INT2FIX(ent.aux_attributes));
 
-  v_struct = rb_struct_new(
-    sPrincipalStruct,
-    v_user,
-    ent.princ_expire_time ? rb_time_new(ent.princ_expire_time, 0) : Qnil,
-    ent.last_pwd_change ? rb_time_new(ent.last_pwd_change, 0) : Qnil,
-    ent.pw_expiration ? rb_time_new(ent.pw_expiration, 0) : Qnil,
-    LONG2FIX(ent.max_life),
-    rb_str_new2(name),
-    ent.mod_date ? rb_time_new(ent.mod_date, 0) : Qnil,
-    LONG2FIX(ent.attributes),
-    INT2FIX(ent.kvno),
-    ent.policy ? rb_str_new2(ent.policy) : Qnil,
-    INT2FIX(ent.aux_attributes),
-    LONG2FIX(ent.max_renewable_life),
-    ent.last_success ? rb_time_new(ent.last_success, 0) : Qnil,
-    ent.last_failed ? rb_time_new(ent.last_failed, 0) : Qnil,
-    INT2FIX(ent.fail_auth_count)
-  );
+  if(ent.princ_expire_time)
+    rb_iv_set(v_principal, "@expire_time", rb_time_new(ent.princ_expire_time, 0));
 
-  rb_obj_freeze(v_struct); // This is readonly data.
+  rb_iv_set(v_principal, "@fail_auth_count", INT2FIX(ent.fail_auth_count));
+  rb_iv_set(v_principal, "@kvno", INT2FIX(ent.kvno));
 
-  return v_struct;
+  if(ent.last_failed)
+    rb_iv_set(v_principal, "@last_failed", rb_time_new(ent.last_failed, 0));
+
+  if(ent.last_failed)
+    rb_iv_set(v_principal, "@last_password_change", rb_time_new(ent.last_pwd_change, 0));
+
+  if(ent.last_failed)
+    rb_iv_set(v_principal, "@last_success", rb_time_new(ent.last_success, 0));
+
+  rb_iv_set(v_principal, "@max_life", LONG2FIX(ent.max_life));
+  rb_iv_set(v_principal, "@max_renewable_life", LONG2FIX(ent.max_renewable_life));
+
+  if(ent.mod_date)
+    rb_iv_set(v_principal, "@mod_date", rb_time_new(ent.mod_date, 0));
+
+  if(ent.mod_name){
+    char* mod_name;
+    kerror = krb5_unparse_name(ptr->ctx, ent.mod_name, &mod_name);
+
+    if(kerror)
+      rb_raise(cKadm5Exception, "krb5_unparse_name: %s", error_message(kerror));
+
+    rb_iv_set(v_principal, "@mod_name", rb_str_new2(mod_name));
+  }
+
+  if(ent.pw_expiration)
+    rb_iv_set(v_principal, "@password_expiration", rb_time_new(ent.pw_expiration, 0));
+
+  if(ent.policy)
+    rb_iv_set(v_principal, "policy", rb_str_new2(ent.policy));
+
+  return v_principal;
 }
 
 void Init_kadm5(){
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
   cKadm5Exception = rb_define_class_under(cKadm5, "Exception", rb_eStandardError);
 
+  // Allocation Functions
+
   rb_define_alloc_func(cKadm5, rkadm5_allocate);
+
+  // Initialization Method
+
   rb_define_method(cKadm5, "initialize", rkadm5_initialize, 1);
+
+  // Instance Methods
 
   rb_define_method(cKadm5, "close", rkadm5_close, 0);
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
@@ -389,25 +416,7 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
-  sPrincipalStruct = rb_struct_define(
-    "Principal",
-    "principal",
-    "princ_expire_time",
-    "last_pwd_change",
-    "pw_expiration",
-    "max_life",
-    "mod_name",
-    "mod_date",
-    "attributes",
-    "kvno",
-    "policy",
-    "aux_attributes",
-    "max_renewable_life",
-    "last_success",
-    "last_failed",
-    "fail_auth_count",
-    NULL
-  );
+  // Constants
 
   rb_define_const(cKadm5, "DISALLOW_POSTDATED", INT2FIX(KRB5_KDB_DISALLOW_POSTDATED));
   rb_define_const(cKadm5, "DISALLOW_FORWARDABLE", INT2FIX(KRB5_KDB_DISALLOW_FORWARDABLE));
