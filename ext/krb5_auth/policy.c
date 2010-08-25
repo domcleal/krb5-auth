@@ -18,6 +18,12 @@ static VALUE rkadm5_policy_allocate(VALUE klass){
   return Data_Wrap_Struct(klass, 0, rkadm5_policy_free, ptr);
 }
 
+/*
+ * call-seq:
+ *   Krb5Auth::Kadm5::Policy.new(policy_name)
+ *
+ * Returns a new policy object. Yields itself in block form.
+ */
 static VALUE rkadm5_policy_init(VALUE self, VALUE v_policy){
   RUBY_KADM5_POLICY* ptr;
   krb5_error_code kerror;
@@ -37,10 +43,14 @@ static VALUE rkadm5_policy_init(VALUE self, VALUE v_policy){
   rb_iv_set(self, "@pw_failcnt_interval", Qnil);
   rb_iv_set(self, "@pw_lockout_duration", Qnil);
 
+  if(rb_block_given_p())
+    rb_yield(self);
+
   return self;
 }
 
 void Init_policy(){
+  /* The Krb5Auth::Kadm5::Policy class encapsulates a Kerberos policy. */
   cKadm5Policy = rb_define_class_under(cKadm5, "Policy", rb_cObject);
 
   // Allocation Function
@@ -54,6 +64,15 @@ void Init_policy(){
   // Accessors
 
   rb_define_attr(cKadm5Policy, "policy", 1, 0);
+  rb_define_attr(cKadm5Policy, "pw_min_life", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_max_life", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_min_length", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_min_classes", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_history_num", 1, 1);
+  rb_define_attr(cKadm5Policy, "policy_refcnt", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_max_fail", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_failcnt_interval", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_lockout_duration", 1, 1);
 
   // Aliases
 
