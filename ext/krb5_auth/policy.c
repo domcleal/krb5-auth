@@ -63,15 +63,34 @@ void Init_policy(){
 
   // Accessors
 
+  /* The name of the policy. */
   rb_define_attr(cKadm5Policy, "policy", 1, 0);
+
+  /* The minimum password lifetime, in seconds. */
   rb_define_attr(cKadm5Policy, "pw_min_life", 1, 1);
+
+  /* The maximum duration of a password, in seconds. */
   rb_define_attr(cKadm5Policy, "pw_max_life", 1, 1);
+
+  /* The minimum password length. */
   rb_define_attr(cKadm5Policy, "pw_min_length", 1, 1);
+
+  /* The minimum number of character classes (1-5). */
   rb_define_attr(cKadm5Policy, "pw_min_classes", 1, 1);
+
+  /* The number of past passwords that are stored. */
   rb_define_attr(cKadm5Policy, "pw_history_num", 1, 1);
+
+  /* The number of principals currently using this policy. */
   rb_define_attr(cKadm5Policy, "policy_refcnt", 1, 1);
+
+  /* Maximum number of password attempts before lockout. */
   rb_define_attr(cKadm5Policy, "pw_max_fail", 1, 1);
+
+  /* Period after which bad preauthentication count will be reset. */
   rb_define_attr(cKadm5Policy, "pw_failcnt_interval", 1, 1);
+
+  /* Period in which lockout is enforced. A value of 0 requires manual unlocking. */
   rb_define_attr(cKadm5Policy, "pw_lockout_duration", 1, 1);
 
   // Aliases
