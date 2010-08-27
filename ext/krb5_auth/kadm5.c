@@ -206,11 +206,10 @@ static VALUE rkadm5_set_password(VALUE self, VALUE v_user, VALUE v_pass){
 
 /*
  * call-seq:
- *   kadm5.create_principal(principal_name, password)
- *   kadm5.create_principal(principal_object)
+ *   kadm5.create_principal(name, password)
+ *   kadm5.create_principal(principal)
  *
  * Creates a new principal +name+ with an initial password of +password+.
- *
  *--
  * TODO: Allow a Principal object to be passed in as an argument.
  */
@@ -397,6 +396,44 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   return v_principal;
 }
 
+/*
+ * call-seq:
+ *   kadm5.create_policy(policy)
+ *
+ * Creates a new Kerberos policy based on the Policy object.
+ */
+static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
+  RUBY_KADM5* ptr;
+  RUBY_KADM5_POLICY* pptr;
+  krb5_error_code kerror;
+  long mask = KADM5_POLICY;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+  Data_Get_Struct(v_policy, RUBY_KADM5_POLICY, pptr);
+
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
+
+  if(pptr->policy.pw_min_classes)
+    mask |= KADM5_PW_MIN_CLASSES;
+
+  if(pptr->policy.pw_min_length)
+    mask |= KADM5_PW_MIN_LENGTH;
+
+  if(pptr->policy.pw_min_life)
+    mask |= KADM5_PW_MIN_LIFE;
+
+  if(pptr->policy.pw_max_life)
+    mask |= KADM5_PW_MAX_LIFE;
+
+  kerror = kadm5_create_policy(ptr->handle, &pptr->policy, mask);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_create_policy: %s", error_message(kerror));
+
+  return self;
+}
+
 void Init_kadm5(){
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
   cKadm5Exception = rb_define_class_under(cKadm5, "Exception", rb_eStandardError);
@@ -412,6 +449,7 @@ void Init_kadm5(){
   // Instance Methods
 
   rb_define_method(cKadm5, "close", rkadm5_close, 0);
+  rb_define_method(cKadm5, "create_policy", rkadm5_create_policy, 1);
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
