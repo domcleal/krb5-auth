@@ -23,9 +23,21 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
     assert_alias_method(@policy, :name, :policy)
   end
 
+  test 'policy name must be a string' do
+    assert_raise(TypeError){ Krb5Auth::Kadm5::Policy.new(1) }
+  end
+
   test 'pw_min_life basic functionality' do
     assert_respond_to(@policy, :pw_min_life)
     assert_nothing_raised{ @policy.pw_min_life }
+  end
+
+  test 'pw_min_life must be a number if not nil' do
+    assert_raise(TypeError){ @policy.pw_min_life = 'test' }
+  end
+
+  test 'pw_min_life can be set to nil explicitly' do
+    assert_nothing_raised{ @policy.pw_min_life = nil }
   end
 
   test 'pw_max_life basic functionality' do
@@ -33,9 +45,25 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
     assert_nothing_raised{ @policy.pw_max_life }
   end
 
+  test 'pw_max_life must be a number if not nil' do
+    assert_raise(TypeError){ @policy.pw_max_life = 'test' }
+  end
+
+  test 'pw_max life can be set to nil explicitly' do
+    assert_nothing_raised{ @policy.pw_max_life = nil }
+  end
+
   test 'pw_min_length basic functionality' do
     assert_respond_to(@policy, :pw_min_length)
     assert_nothing_raised{ @policy.pw_min_length }
+  end
+
+  test 'pw_min_length must be a number if not nil' do
+    assert_raise(TypeError){ @policy.pw_min_length = 'test' }
+  end
+
+  test 'pw_min_length can be set to nil explicitly' do
+    assert_nothing_raised{ @policy.pw_min_length = nil }
   end
 
   test 'pw_min_classes basic functionality' do

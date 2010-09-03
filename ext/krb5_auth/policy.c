@@ -26,7 +26,6 @@ static VALUE rkadm5_policy_allocate(VALUE klass){
  */
 static VALUE rkadm5_policy_init(VALUE self, VALUE v_policy){
   RUBY_KADM5_POLICY* ptr;
-  krb5_error_code kerror;
 
   Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
 
@@ -46,7 +45,92 @@ static VALUE rkadm5_policy_init(VALUE self, VALUE v_policy){
   if(rb_block_given_p())
     rb_yield(self);
 
+  // Set the underlying structure values
+
+  ptr->policy.policy = StringValuePtr(v_policy);
+
+  if(RTEST(rb_iv_get(self, "@pw_min_life")))
+    ptr->policy.pw_min_life = NUM2LONG(rb_iv_get(self, "@pw_min_life"));
+
+  if(RTEST(rb_iv_get(self, "@pw_max_life")))
+    ptr->policy.pw_max_life = NUM2LONG(rb_iv_get(self, "@pw_max_life"));
+
+  if(RTEST(rb_iv_get(self, "@pw_min_length")))
+    ptr->policy.pw_min_length = NUM2LONG(rb_iv_get(self, "@pw_min_length"));
+
+  if(RTEST(rb_iv_get(self, "@pw_min_classes")))
+    ptr->policy.pw_min_length = NUM2LONG(rb_iv_get(self, "@pw_min_classes"));
+
+  if(RTEST(rb_iv_get(self, "@pw_history_num")))
+    ptr->policy.pw_history_num = NUM2LONG(rb_iv_get(self, "@pw_history_num"));
+
+  if(RTEST(rb_iv_get(self, "@policy_refcnt")))
+    ptr->policy.pw_history_num = NUM2LONG(rb_iv_get(self, "@policy_refcnt"));
+
+  if(RTEST(rb_iv_get(self, "@pw_max_fail")))
+    ptr->policy.pw_history_num = NUM2LONG(rb_iv_get(self, "@pw_max_fail"));
+
+  if(RTEST(rb_iv_get(self, "@pw_failcnt_interval")))
+    ptr->policy.pw_history_num = NUM2LONG(rb_iv_get(self, "@pw_failcnt_interval"));
+
+  if(RTEST(rb_iv_get(self, "@pw_lockout_duration")))
+    ptr->policy.pw_history_num = NUM2LONG(rb_iv_get(self, "@pw_lockout_duration"));
+
   return self;
+}
+
+/*
+ * call-seq:
+ *   policy.pw_min_life = 1000
+ *
+ * Set the minimum password lifetime, in seconds.
+ */
+static VALUE rkadm5_policy_set_pw_min_life(VALUE self, VALUE v_num){
+  RUBY_KADM5_POLICY* ptr;
+  Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
+
+  if(!NIL_P(v_num)){
+    Check_Type(v_num, T_FIXNUM);
+    rb_iv_set(self, "@pw_min_life", LONG2FIX(v_num));
+  }
+
+  return v_num;
+}
+
+/*
+ * call-seq:
+ *   policy.pw_max_life = 1000
+ *
+ * Set the maximum password lifetime, in seconds.
+ */
+static VALUE rkadm5_policy_set_pw_max_life(VALUE self, VALUE v_num){
+  RUBY_KADM5_POLICY* ptr;
+  Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
+
+  if(!NIL_P(v_num)){
+    Check_Type(v_num, T_FIXNUM);
+    rb_iv_set(self, "@pw_max_life", LONG2FIX(v_num));
+  }
+
+  return v_num;
+}
+
+/*
+ * call-seq:
+ *   policy.pw_min_length = 1000
+ *
+ * Set the minimum password length.
+ */
+static VALUE rkadm5_policy_set_pw_min_length(VALUE self, VALUE v_num){
+  RUBY_KADM5_POLICY* ptr;
+  Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
+
+  if(!NIL_P(v_num)){
+    Check_Type(v_num, T_FIXNUM);
+    rb_iv_set(self, "@pw_min_length", LONG2FIX(v_num));
+  }
+
+  return v_num;
 }
 
 void Init_policy(){
@@ -61,19 +145,24 @@ void Init_policy(){
 
   rb_define_method(cKadm5Policy, "initialize", rkadm5_policy_init, 1);
 
+  // Instance Methods
+  rb_define_method(cKadm5Policy, "pw_min_life=", rkadm5_policy_set_pw_min_life, 1);
+  rb_define_method(cKadm5Policy, "pw_max_life=", rkadm5_policy_set_pw_max_life, 1);
+  rb_define_method(cKadm5Policy, "pw_min_length=", rkadm5_policy_set_pw_min_length, 1);
+
   // Accessors
 
   /* The name of the policy. */
   rb_define_attr(cKadm5Policy, "policy", 1, 0);
 
   /* The minimum password lifetime, in seconds. */
-  rb_define_attr(cKadm5Policy, "pw_min_life", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_min_life", 1, 0);
 
   /* The maximum duration of a password, in seconds. */
-  rb_define_attr(cKadm5Policy, "pw_max_life", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_max_life", 1, 0);
 
   /* The minimum password length. */
-  rb_define_attr(cKadm5Policy, "pw_min_length", 1, 1);
+  rb_define_attr(cKadm5Policy, "pw_min_length", 1, 0);
 
   /* The minimum number of character classes (1-5). */
   rb_define_attr(cKadm5Policy, "pw_min_classes", 1, 1);
