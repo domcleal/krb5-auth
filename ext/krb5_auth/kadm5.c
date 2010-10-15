@@ -429,7 +429,7 @@ static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
   kerror = kadm5_create_policy(ptr->handle, &pptr->policy, mask);
 
   if(kerror)
-    rb_raise(cKadm5Exception, "krb5_create_policy: %s", error_message(kerror));
+    rb_raise(cKadm5Exception, "krb5_create_policy: %s (%li)", error_message(kerror), kerror);
 
   return self;
 }

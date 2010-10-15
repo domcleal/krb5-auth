@@ -91,7 +91,8 @@ static VALUE rkadm5_policy_set_pw_min_life(VALUE self, VALUE v_num){
 
   if(!NIL_P(v_num)){
     Check_Type(v_num, T_FIXNUM);
-    rb_iv_set(self, "@pw_min_life", LONG2FIX(v_num));
+    rb_iv_set(self, "@pw_min_life", v_num);
+    ptr->policy.pw_min_life = LONG2FIX(v_num);
   }
 
   return v_num;
@@ -109,7 +110,8 @@ static VALUE rkadm5_policy_set_pw_max_life(VALUE self, VALUE v_num){
 
   if(!NIL_P(v_num)){
     Check_Type(v_num, T_FIXNUM);
-    rb_iv_set(self, "@pw_max_life", LONG2FIX(v_num));
+    rb_iv_set(self, "@pw_max_life", v_num);
+    ptr->policy.pw_max_life = LONG2FIX(v_num);
   }
 
   return v_num;
@@ -127,10 +129,18 @@ static VALUE rkadm5_policy_set_pw_min_length(VALUE self, VALUE v_num){
 
   if(!NIL_P(v_num)){
     Check_Type(v_num, T_FIXNUM);
-    rb_iv_set(self, "@pw_min_length", LONG2FIX(v_num));
+    rb_iv_set(self, "@pw_min_length", v_num);
+    ptr->policy.pw_min_length = LONG2FIX(v_num);
   }
 
   return v_num;
+}
+
+static VALUE rkadm5_policy_create(VALUE self){
+  RUBY_KADM5_POLICY* ptr;
+  Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
+
+  return self; 
 }
 
 void Init_policy(){
@@ -149,6 +159,8 @@ void Init_policy(){
   rb_define_method(cKadm5Policy, "pw_min_life=", rkadm5_policy_set_pw_min_life, 1);
   rb_define_method(cKadm5Policy, "pw_max_life=", rkadm5_policy_set_pw_max_life, 1);
   rb_define_method(cKadm5Policy, "pw_min_length=", rkadm5_policy_set_pw_min_length, 1);
+
+  rb_define_method(cKadm5Policy, "create", rkadm5_policy_create, 0);
 
   // Accessors
 

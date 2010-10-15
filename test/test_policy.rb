@@ -32,6 +32,12 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
     assert_nothing_raised{ @policy.pw_min_life }
   end
 
+  test 'pw_min_life setter basic functionality' do
+    assert_nothing_raised{ @policy.pw_min_life = 1000 }
+    assert_equal(1000, @policy.pw_min_life = 1000)
+    assert_equal(1000, @policy.pw_min_life)
+  end
+
   test 'pw_min_life must be a number if not nil' do
     assert_raise(TypeError){ @policy.pw_min_life = 'test' }
   end
@@ -45,6 +51,12 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
     assert_nothing_raised{ @policy.pw_max_life }
   end
 
+  test 'pw_max_life setter basic functionality' do
+    assert_nothing_raised{ @policy.pw_max_life = 1000 }
+    assert_equal(1000, @policy.pw_max_life = 1000)
+    assert_equal(1000, @policy.pw_max_life)
+  end
+
   test 'pw_max_life must be a number if not nil' do
     assert_raise(TypeError){ @policy.pw_max_life = 'test' }
   end
@@ -56,6 +68,12 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
   test 'pw_min_length basic functionality' do
     assert_respond_to(@policy, :pw_min_length)
     assert_nothing_raised{ @policy.pw_min_length }
+  end
+
+  test 'pw_min_length setter basic functionality' do
+    assert_nothing_raised{ @policy.pw_min_length = 10 }
+    assert_equal(10, @policy.pw_min_length = 10)
+    assert_equal(10, @policy.pw_min_length)
   end
 
   test 'pw_min_length must be a number if not nil' do
