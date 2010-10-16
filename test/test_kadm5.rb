@@ -18,15 +18,17 @@ require 'socket'
 class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   def self.startup
     @@default_keytab = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
+    @@server = Krb5Auth::Kadm5::Config.new.admin_server
     @@info = DBI::DBRC.new('test-kerberos')
     @@host = Socket.gethostname
 
-    ENV['KRB5_CONFIG'] = @@info.driver || ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
-    @@server = IO.read(ENV['KRB5_CONFIG']).grep(/admin_server/i)
-
-    if @@server
-      @@server = @@server.first.split('=').last.split('.').first.lstrip.chomp
+    # For local testing the FQDN may or may not be available, so let's assume
+    # that hosts with the same name are on the same domain.
+    if @@server.include?('.') && !@@host.include?('.')
+      @@server = @@server.split('.').first
     end
+
+    ENV['KRB5_CONFIG'] = @@info.driver || ENV['KRB5_CONFIG'] || '/etc/krb5.conf'
   end
 
   def setup
@@ -206,7 +208,6 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
     assert_nothing_raised{ @princ = @kadm.get_principal(@test_princ) }
     assert_kind_of(Krb5Auth::Krb5::Principal, @princ)
-    p @princ
   end
 
   test "get_principal raises an error if not found" do
@@ -265,6 +266,9 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   end
 
   def self.shutdown
+    @@host = nil
     @@info = nil
+    @@server = nil
+    @@default_keytab = nil
   end
 end
