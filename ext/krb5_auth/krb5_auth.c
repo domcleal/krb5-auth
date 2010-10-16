@@ -1,17 +1,8 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
 
-extern VALUE mKerberos;
-extern VALUE cKrb5;
-extern VALUE cKrb5CCache;
-extern VALUE cKrb5Context;
-extern VALUE cKrb5Keytab;
-extern VALUE cKrb5KtEntry;
-extern VALUE cKrb5Exception;
-extern VALUE cKrb5Principal;
-extern VALUE cKadm5;
-extern VALUE cKadm5Config;
-extern VALUE cKadm5Exception;
-extern VALUE cKadm5Policy;
+VALUE mKerberos;
+VALUE cKrb5;
+VALUE cKrb5Exception;
 
 // Free function for the Krb5Auth::Krb5 class.
 static void rkrb5_free(RUBY_KRB5* ptr){

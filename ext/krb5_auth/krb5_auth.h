@@ -22,18 +22,18 @@ void Init_ccache();
 static VALUE rb_hash_aref2(VALUE, char*);
 
 // Variable declarations
-VALUE mKerberos;
-VALUE cKrb5;
-VALUE cKrb5CCache;
-VALUE cKrb5Context;
-VALUE cKrb5Keytab;
-VALUE cKrb5KtEntry;
-VALUE cKrb5Exception;
-VALUE cKrb5Principal;
-VALUE cKadm5;
-VALUE cKadm5Config;
-VALUE cKadm5Exception;
-VALUE cKadm5Policy;
+extern VALUE mKerberos;
+extern VALUE cKrb5;
+extern VALUE cKrb5CCache;
+extern VALUE cKrb5Context;
+extern VALUE cKrb5Keytab;
+extern VALUE cKrb5KtEntry;
+extern VALUE cKrb5Exception;
+extern VALUE cKrb5Principal;
+extern VALUE cKadm5;
+extern VALUE cKadm5Config;
+extern VALUE cKadm5Exception;
+extern VALUE cKadm5Policy;
 
 // Krb5Auth::Krb5
 typedef struct {
@@ -92,20 +92,17 @@ typedef struct {
   kadm5_policy_ent_rec policy;
 } RUBY_KADM5_POLICY;
 
-#ifndef __RB_HASH_AREF2__
-#define __RB_HASH_AREF2__
 // Get a hash value by string or symbol.
 static VALUE rb_hash_aref2(VALUE v_hash, char* key){
-  VALUE v_key, v_value;
+  VALUE v_key, v_val;
 
   v_key = rb_str_new2(key);
-  v_value = rb_hash_aref(v_hash, v_key); 
+  v_val = rb_hash_aref(v_hash, v_key); 
 
-  if(NIL_P(v_value))
-    v_value = rb_hash_aref(v_hash, ID2SYM(rb_intern(key)));
+  if(NIL_P(v_val))
+    v_val = rb_hash_aref(v_hash, ID2SYM(rb_intern(key)));
 
-  return v_value;
+  return v_val;
 }
-#endif
 
 #endif

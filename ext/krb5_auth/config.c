@@ -1,4 +1,6 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
+
+VALUE cKadm5Config;
 
 static void rkadm5_config_free(RUBY_KADM5_CONFIG* ptr){
   if(!ptr)
