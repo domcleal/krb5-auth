@@ -1,4 +1,6 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
+
+VALUE cKrb5CCache;
 
 // Free function for the Krb5Auth::Krb5::CCache class.
 static void rkrb5_ccache_free(RUBY_KRB5_CCACHE* ptr){

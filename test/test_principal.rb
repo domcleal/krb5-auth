@@ -65,9 +65,9 @@ class TC_Krb5_Principal < Test::Unit::TestCase
     assert_nothing_raised{ @princ.attributes }
   end
 
-  test "vno basic functionality" do
-    assert_respond_to(@princ, :vno)
-    assert_nothing_raised{ @princ.vno }
+  test "kvno basic functionality" do
+    assert_respond_to(@princ, :kvno)
+    assert_nothing_raised{ @princ.kvno }
   end
 
   test "policy basic functionality" do

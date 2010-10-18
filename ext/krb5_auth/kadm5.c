@@ -1,4 +1,7 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
+
+VALUE cKadm5;
+VALUE cKadm5Exception;
 
 // Free function for the Krb5Auth::Kadm5 class.
 static void rkadm5_free(RUBY_KADM5* ptr){

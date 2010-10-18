@@ -1,4 +1,6 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
+
+VALUE cKadm5Policy;
 
 // Free function for the Krb5Auth::Krb5::CCache class.
 static void rkadm5_policy_free(RUBY_KADM5_POLICY* ptr){

@@ -1,4 +1,6 @@
-#include "krb5_auth.h"
+#include <krb5_auth.h>
+
+VALUE cKrb5KtEntry;
 
 // Free function for the Krb5Auth::Krb5::Keytab::Entry class.
 static void rkrb5_kt_entry_free(RUBY_KRB5_KT_ENTRY* ptr){
