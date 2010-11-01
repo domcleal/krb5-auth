@@ -192,6 +192,34 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(ArgumentError){ @kadm.delete_principal(@user, @pass) }
   end
 
+  test "find_principal basic functionality" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_respond_to(@kadm, :find_principal)
+  end
+
+  test "find_principal returns a Struct::Principal object if found" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nothing_raised{ @kadm.create_principal(@test_princ, "changeme") }
+    assert_nothing_raised{ @princ = @kadm.find_principal(@test_princ) }
+    assert_kind_of(Krb5Auth::Krb5::Principal, @princ)
+  end
+
+  test "find_principal returns nil if not found" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nil(@kadm.find_principal('bogus'))
+  end
+
+  test "find_principal requires a string argument" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_raise(TypeError){ @kadm.find_principal(1) }
+  end
+
+  test "find_principal requires one and only one argument" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_raise(ArgumentError){ @kadm.find_principal }
+    assert_raise(ArgumentError){ @kadm.find_principal(@user, @user) }
+  end
+
   test "get_principal basic functionality" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
     assert_respond_to(@kadm, :get_principal)
