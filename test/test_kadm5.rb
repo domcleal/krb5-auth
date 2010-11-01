@@ -220,6 +220,12 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(ArgumentError){ @kadm.find_principal(@user, @user) }
   end
 
+  test "find is an alias for find_principal" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_respond_to(@kadm, :find)
+    assert_alias_method(@kadm, :find, :find_principal)
+  end
+
   test "get_principal basic functionality" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
     assert_respond_to(@kadm, :get_principal)

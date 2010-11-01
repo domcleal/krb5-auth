@@ -377,7 +377,6 @@ static VALUE create_principal_from_entry(VALUE v_name, RUBY_KADM5* ptr, kadm5_pr
 static VALUE rkadm5_find_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
   VALUE v_principal;
-  VALUE v_args[1];
   char* user;
   int mask;
   kadm5_principal_ent_rec ent;
@@ -431,7 +430,6 @@ static VALUE rkadm5_find_principal(VALUE self, VALUE v_user){
 static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
   VALUE v_principal;
-  VALUE v_args[1];
   char* user;
   int mask;
   kadm5_principal_ent_rec ent;
@@ -528,6 +526,10 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
+  // Aliases
+
+  rb_define_alias(cKadm5, "find", "find_principal");
+
   // Constants
 
   rb_define_const(cKadm5, "DISALLOW_POSTDATED", INT2FIX(KRB5_KDB_DISALLOW_POSTDATED));
@@ -544,5 +546,4 @@ void Init_kadm5(){
   rb_define_const(cKadm5, "PWCHANGE_SERVICE", INT2FIX(KRB5_KDB_PWCHANGE_SERVICE));
   rb_define_const(cKadm5, "SUPPORT_DESMD5", INT2FIX(KRB5_KDB_SUPPORT_DESMD5));
   rb_define_const(cKadm5, "NEW_PRINC", INT2FIX(KRB5_KDB_NEW_PRINC));
-
 }
