@@ -310,6 +310,59 @@ static VALUE rkadm5_close(VALUE self){
   return self;
 }
 
+// Private function for creating a Principal object from a entry record.
+static VALUE create_principal_from_entry(VALUE v_name, RUBY_KADM5* ptr, kadm5_principal_ent_rec* ent){
+  krb5_error_code kerror;
+  VALUE v_principal;
+  VALUE v_args[1];
+
+  v_args[0] = v_name;
+
+  v_principal = rb_class_new_instance(1, v_args, cKrb5Principal);
+
+  rb_iv_set(v_principal, "@attributes", LONG2FIX(ent->attributes));
+  rb_iv_set(v_principal, "@aux_attributes", INT2FIX(ent->aux_attributes));
+
+  if(ent->princ_expire_time)
+    rb_iv_set(v_principal, "@expire_time", rb_time_new(ent->princ_expire_time, 0));
+
+  rb_iv_set(v_principal, "@fail_auth_count", INT2FIX(ent->fail_auth_count));
+  rb_iv_set(v_principal, "@kvno", INT2FIX(ent->kvno));
+
+  if(ent->last_failed)
+    rb_iv_set(v_principal, "@last_failed", rb_time_new(ent->last_failed, 0));
+
+  if(ent->last_failed)
+    rb_iv_set(v_principal, "@last_password_change", rb_time_new(ent->last_pwd_change, 0));
+
+  if(ent->last_failed)
+    rb_iv_set(v_principal, "@last_success", rb_time_new(ent->last_success, 0));
+
+  rb_iv_set(v_principal, "@max_life", LONG2FIX(ent->max_life));
+  rb_iv_set(v_principal, "@max_renewable_life", LONG2FIX(ent->max_renewable_life));
+
+  if(ent->mod_date)
+    rb_iv_set(v_principal, "@mod_date", rb_time_new(ent->mod_date, 0));
+
+  if(ent->mod_name){
+    char* mod_name;
+    kerror = krb5_unparse_name(ptr->ctx, ent->mod_name, &mod_name);
+
+    if(kerror)
+      rb_raise(cKadm5Exception, "krb5_unparse_name: %s", error_message(kerror));
+
+    rb_iv_set(v_principal, "@mod_name", rb_str_new2(mod_name));
+  }
+
+  if(ent->pw_expiration)
+    rb_iv_set(v_principal, "@password_expiration", rb_time_new(ent->pw_expiration, 0));
+
+  if(ent->policy)
+    rb_iv_set(v_principal, "policy", rb_str_new2(ent->policy));
+
+  return v_principal;
+}
+
 /*
  * call-seq:
  *   kadm5.get_principal(principal_name)
@@ -353,48 +406,7 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_get_principal: %s", error_message(kerror));
 
-  v_args[0] = v_user;
-  v_principal = rb_class_new_instance(1, v_args, cKrb5Principal);
-
-  rb_iv_set(v_principal, "@attributes", LONG2FIX(ent.attributes));
-  rb_iv_set(v_principal, "@aux_attributes", INT2FIX(ent.aux_attributes));
-
-  if(ent.princ_expire_time)
-    rb_iv_set(v_principal, "@expire_time", rb_time_new(ent.princ_expire_time, 0));
-
-  rb_iv_set(v_principal, "@fail_auth_count", INT2FIX(ent.fail_auth_count));
-  rb_iv_set(v_principal, "@kvno", INT2FIX(ent.kvno));
-
-  if(ent.last_failed)
-    rb_iv_set(v_principal, "@last_failed", rb_time_new(ent.last_failed, 0));
-
-  if(ent.last_failed)
-    rb_iv_set(v_principal, "@last_password_change", rb_time_new(ent.last_pwd_change, 0));
-
-  if(ent.last_failed)
-    rb_iv_set(v_principal, "@last_success", rb_time_new(ent.last_success, 0));
-
-  rb_iv_set(v_principal, "@max_life", LONG2FIX(ent.max_life));
-  rb_iv_set(v_principal, "@max_renewable_life", LONG2FIX(ent.max_renewable_life));
-
-  if(ent.mod_date)
-    rb_iv_set(v_principal, "@mod_date", rb_time_new(ent.mod_date, 0));
-
-  if(ent.mod_name){
-    char* mod_name;
-    kerror = krb5_unparse_name(ptr->ctx, ent.mod_name, &mod_name);
-
-    if(kerror)
-      rb_raise(cKadm5Exception, "krb5_unparse_name: %s", error_message(kerror));
-
-    rb_iv_set(v_principal, "@mod_name", rb_str_new2(mod_name));
-  }
-
-  if(ent.pw_expiration)
-    rb_iv_set(v_principal, "@password_expiration", rb_time_new(ent.pw_expiration, 0));
-
-  if(ent.policy)
-    rb_iv_set(v_principal, "policy", rb_str_new2(ent.policy));
+  v_principal = create_principal_from_entry(v_user, ptr, &ent);
 
   return v_principal;
 }
