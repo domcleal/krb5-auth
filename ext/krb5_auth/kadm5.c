@@ -175,8 +175,10 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     // TODO: Credentials cache.
   }
 
-  if(rb_block_given_p())
-    return rb_ensure(rb_yield, self, rkadm5_close, self);
+  if(rb_block_given_p()){
+    rb_ensure(rb_yield, self, rkadm5_close, self);
+    return Qnil;
+  }
 
   return self;
 }

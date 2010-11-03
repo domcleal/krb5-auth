@@ -52,8 +52,10 @@ static VALUE rkrb5_initialize(VALUE self){
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
 
-  if(rb_block_given_p())
-    return rb_ensure(rb_yield, self, rkrb5_close, self);
+  if(rb_block_given_p()){
+    rb_ensure(rb_yield, self, rkrb5_close, self);
+    return Qnil;
+  }
 
   return self;
 }
