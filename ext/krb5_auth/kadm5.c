@@ -3,6 +3,9 @@
 VALUE cKadm5;
 VALUE cKadm5Exception;
 
+// Prototype
+static VALUE rkadm5_close(VALUE);
+
 // Free function for the Krb5Auth::Kadm5 class.
 static void rkadm5_free(RUBY_KADM5* ptr){
   if(!ptr)
@@ -171,6 +174,9 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
   else{
     // TODO: Credentials cache.
   }
+
+  if(rb_block_given_p())
+    return rb_ensure(rb_yield, self, rkadm5_close, self);
 
   return self;
 }

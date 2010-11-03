@@ -70,9 +70,16 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => @keytab) }
   end
 
-  test "constructor only accepts a hash" do
+  test "constructor only accepts a hash argument" do
     assert_raise(TypeError){ Krb5Auth::Kadm5.new(@user) }
     assert_raise(TypeError){ Krb5Auth::Kadm5.new(1) }
+  end
+
+  test "constructor accepts a block and yields itself" do
+    assert_nothing_raised{ Krb5Auth::Kadm5.new(:principal => @user, :password => @pass){} }
+    Krb5Auth::Kadm5.new(:principal => @user, :password => @password){ |kadm5|
+      assert_kind_of(Krb5Auth::Kadm5, kadm5)
+    }
   end
 
   test "principal must be specified" do
