@@ -4,6 +4,9 @@ VALUE mKerberos;
 VALUE cKrb5;
 VALUE cKrb5Exception;
 
+// Function prototypes
+static VALUE rkrb5_close(VALUE);
+
 // Free function for the Krb5Auth::Krb5 class.
 static void rkrb5_free(RUBY_KRB5* ptr){
   if(!ptr)
@@ -48,6 +51,9 @@ static VALUE rkrb5_initialize(VALUE self){
 
   if(kerror)
     rb_raise(cKrb5Exception, "krb5_init_context: %s", error_message(kerror));
+
+  if(rb_block_given_p())
+    return rb_ensure(rb_yield, self, rkrb5_close, self);
 
   return self;
 }

@@ -35,6 +35,11 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_equal('0.9.0', Krb5Auth::Krb5::VERSION)
   end
 
+  test "constructor accepts a block and yields itself" do
+    assert_nothing_raised{ Krb5Auth::Krb5.new{} }
+    Krb5Auth::Krb5.new{ |krb5| assert_kind_of(Krb5Auth::Krb5, krb5) }
+  end
+
   test "get_default_realm basic functionality" do
     assert_respond_to(@krb5, :get_default_realm)
     assert_nothing_raised{ @krb5.get_default_realm }
