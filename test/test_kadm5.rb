@@ -77,7 +77,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   test "constructor accepts a block and yields itself" do
     assert_nothing_raised{ Krb5Auth::Kadm5.new(:principal => @user, :password => @pass){} }
-    Krb5Auth::Kadm5.new(:principal => @user, :password => @password){ |kadm5|
+    Krb5Auth::Kadm5.new(:principal => @user, :password => @pass){ |kadm5|
       assert_kind_of(Krb5Auth::Kadm5, kadm5)
     }
   end
@@ -247,7 +247,7 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
 
   test "get_principal raises an error if not found" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
-    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.get_principal('bogus') }
+    assert_raise(Krb5Auth::Kadm5::PrincipalNotFoundException){ @kadm.get_principal('bogus') }
   end
 
   test "get_principal requires a string argument" do

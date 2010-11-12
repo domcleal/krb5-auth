@@ -2,6 +2,7 @@
 
 VALUE cKadm5;
 VALUE cKadm5Exception;
+VALUE cKadm5PrincipalNotFoundException;
 
 // Prototype
 static VALUE rkadm5_close(VALUE);
@@ -434,6 +435,9 @@ static VALUE rkadm5_find_principal(VALUE self, VALUE v_user){
  * Returns a Principal object for +principal_name+ containing various bits
  * of information regarding that principal, such as policy, attributes,
  * expiration information, etc.
+ *
+ * If the +principal_name+ cannot be found then a PrincipalNotFoundException
+ * is raised.
  */
 static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
   RUBY_KADM5* ptr;
@@ -466,8 +470,12 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
     mask
   );
 
-  if(kerror)
-    rb_raise(cKadm5Exception, "kadm5_get_principal: %s", error_message(kerror));
+  if(kerror){
+    if(kerror == KADM5_UNK_PRINC)
+      rb_raise(cKadm5PrincipalNotFoundException, "principal not found");
+    else
+      rb_raise(cKadm5Exception, "kadm5_get_principal: %s", error_message(kerror));
+  }
 
   v_principal = create_principal_from_entry(v_user, ptr, &ent);
 
@@ -513,8 +521,16 @@ static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
 }
 
 void Init_kadm5(){
+  /* The Kadm5 class encapsulates administrative Kerberos functions. */
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
+
+  /* Error typically raised if any of the Kadm5 methods fail. */
   cKadm5Exception = rb_define_class_under(cKadm5, "Exception", rb_eStandardError);
+
+  /* Error raised if a get_principal call cannot find the principal. */
+  cKadm5PrincipalNotFoundException = rb_define_class_under(
+    cKadm5, "PrincipalNotFoundException", rb_eStandardError
+  );
 
   // Allocation Functions
 
