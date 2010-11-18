@@ -261,9 +261,12 @@ static VALUE rkrb5_keytab_get_entry(int argc, VALUE* argv, VALUE self){
  * name is used. If a +name+ is provided it must be in the form 'type:residual'
  * where 'type' is a type known to the Kerberos library.
  *
- * Example:
+ * Examples:
  *
+ *   # Using the default keytab
  *   keytab = Krb5Auth::Krb5::Keytab.new
+ *
+ *   # Using an explicit keytab
  *   keytab = Krb5Auth::Krb5::Keytab.new('FILE:/etc/krb5.keytab')
  */
 static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
