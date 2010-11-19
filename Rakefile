@@ -3,18 +3,19 @@ require 'rake/testtask'
 require 'rake/extensiontask'
 require 'rake/clean'
 require 'rbconfig'
+include Config
 
 Rake::ExtensionTask.new('krb5_auth')
 
-desc 'Clean any build files and .gem files'
-task :clean do
-  Dir.chdir("ext/krb5_auth") do
-    rm_rf "conftest.dSYM" if File.exists?("conftest.dSYM") # OS X
-    sh "make distclean" rescue nil
-  end
-  Dir['*.gem'].each{ |f| File.delete(f) }
-  rm_rf('lib')
-end
+CLEAN.include(
+  '**/*.gem',               # Gem files
+  '**/*.rbc',               # Rubinius
+  '**/*.o',                 # C object file
+  '**/*.log',               # Ruby extension build log
+  '**/Makefile',            # C Makefile
+  '**/conftest.dSYM',       # OS X build directory
+  "**/*.#{CONFIG['DLEXT']}" # C shared object
+)
 
 desc 'Create a tarball of the source'
 task :archive do
