@@ -1,6 +1,6 @@
 #include <krb5_auth.h>
 
-VALUE cKrb5Keytab;
+VALUE cKrb5Keytab, cKrb5KeytabException;
 
 // Free function for the Krb5Auth::Krb5::Keytab class.
 static void rkrb5_keytab_free(RUBY_KRB5_KEYTAB* ptr){
@@ -141,11 +141,7 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
 /*
  * call-seq:
  *   keytab.add_entry(principal, vno = 0, enctype = nil)
- *
- * TODO: Not working yet. Gotta figure out how to initialize a keytab entry
- * struct properly.
  */
-/*
 static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
@@ -186,7 +182,6 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   
   return self;
 }
-*/
 
 /*
  * call-seq:
@@ -273,11 +268,11 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
   char keytab_name[MAX_KEYTAB_NAME_LEN];
-  VALUE v_keytab_name;
-
-  rb_scan_args(argc, argv, "01", &v_keytab_name);
+  VALUE v_keytab_name = Qnil;
 
   Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  rb_scan_args(argc, argv, "01", &v_keytab_name);
 
   kerror = krb5_init_context(&ptr->ctx); 
 
@@ -290,21 +285,24 @@ static VALUE rkrb5_keytab_initialize(int argc, VALUE* argv, VALUE self){
 
     if(kerror)
       rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
+
+    rb_iv_set(self, "@name", rb_str_new2(keytab_name));
   } 
   else{
     Check_Type(v_keytab_name, T_STRING);
     strncpy(keytab_name, StringValuePtr(v_keytab_name), MAX_KEYTAB_NAME_LEN);
+    rb_iv_set(self, "@name", v_keytab_name);
   }
 
   kerror = krb5_kt_resolve(
     ptr->ctx,
     keytab_name,
-    &ptr->keytab      
+    &ptr->keytab
   );
 
   if(kerror)
-    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
-  
+    rb_raise(cKrb5KeytabException, "krb5_kt_resolve: %s", error_message(kerror));
+
   return self;
 }
 
@@ -431,24 +429,37 @@ void Init_keytab(){
   /* The Krb5Auth::Krb5::Keytab class encapsulates a Kerberos keytab. */
   cKrb5Keytab = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
 
+  /* The Keytab::Exception is typically raised if any of the Keytab methods fail. */
+  cKrb5KeytabException = rb_define_class_under(cKrb5Keytab, "Exception", rb_cObject);
+
   // Allocation Function
+
   rb_define_alloc_func(cKrb5Keytab, rkrb5_keytab_allocate);
 
   // Constructor
+
   rb_define_method(cKrb5Keytab, "initialize", rkrb5_keytab_initialize, -1);
 
   // Singleton Methods
+
   rb_define_singleton_method(cKrb5Keytab, "foreach", rkrb5_s_keytab_foreach, -1);
 
   // Instance Methods
-  rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
+
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
+  rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
 
   //rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
   //rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
   rb_define_method(cKrb5Keytab, "get_entry", rkrb5_keytab_get_entry, -1);
 
+  // Accessors
+
+  /* The name of the keytab associated with the current keytab object. */
+  rb_define_attr(cKrb5Keytab, "name", 1, 0);
+
   // Aliases
+
   rb_define_alias(cKrb5Keytab, "find", "get_entry");
 }
