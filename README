@@ -8,17 +8,26 @@
 = Synopsis
   require 'krb5_auth'
 
+  # Get the default realm name
   krb5 = Krb5Auth::Krb5.new
   puts krb5.default_realm
   krb5.close
 
+  # Get the default keytab name
   keytab = Krb5Auth::Krb5::Keytab.new
   puts keytab.default_name
   keytab.close
 
+  # Set the password for a given principal
   kadm5 = Krb5Auth::Kadm5.new(:principal => 'foo/admin', :password => 'xxxx')
   kadm5.set_password('someuser', 'abc123')
   kadm5.close
+
+  # Using the block form
+  Krb5Auth::Kadm5.new(:principal => 'foo/admin', :password => 'xxxx') do |kadm5|
+    p kadm5.get_principal('someuser')
+    kadm5.set_password('someuser', 'abc123')
+  end
 
 = Notes
   This fork heavily modifies the original krb5_auth library. Several new
@@ -48,6 +57,7 @@
 = TODO
   Replace Struct::Principal with a Principal class with its own methods.
   Create a separate class for the replay cache.
+  Better credentials cache and keytab support.
 
 = CAVEATS
   OS X users will probably need to install Kerberos manually and specify
