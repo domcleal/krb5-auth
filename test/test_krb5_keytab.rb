@@ -23,7 +23,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     unless File.exists?(@@file)
       temp = Dir.tmpdir + "/test.keytab"
       @@file = "FILE:" + temp
-      FileUtils.touch(temp)
+      File.delete(temp) if File.exists?(temp)
     end
 
     @@home_dir = ENV['HOME'] || ENV['USER_PROFILE']
@@ -99,7 +99,8 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
 
   test "get_entry returns an entry if found in the keytab" do
     @user = "testuser1@" + @realm
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab.add_entry(@user)
     assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, @entry)
   end
@@ -115,23 +116,49 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_alias_method(@keytab, :find, :get_entry)
   end
 
-=begin
   test "add_entry basic functionality" do
     assert_respond_to(@keytab, :add_entry)
   end
 
   test "add_entry can add a valid principal" do
-    @user = "testuser1@" + @realm
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
-  test "add_entry fails if an invalid user is added" do
-    @user = "bogus_user@" + @realm
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
-    assert_raise(Krb5Auth::Krb5::Exception){ @keytab.add_entry(@user) }
+  test "add_entry requires at least one argument" do
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_raise(ArgumentError){ @keytab.add_entry }
   end
-=end
+
+  test "first argument add_entry must be a string" do
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_raise(TypeError){ @keytab.add_entry(1) }
+  end
+
+  test "second argument to add_entry must be a number" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_raise(TypeError){ @keytab.add_entry(@user, "test") }
+  end
+
+  test "third argument to add_entry must be a number" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_raise(TypeError){ @keytab.add_entry(@user, 0, "test") }
+  end
+
+  test "add_entry accepts a maximum of three arguments" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_raise(ArgumentError){ @keytab.add_entry(@user, 0, 0, 0) }
+  end
+
+  test "add_entry does not fail if an bogus user is added" do
+    @user = "bogususer@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    assert_nothing_raised{ @keytab.add_entry(@user) }
+  end
 
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
