@@ -10,6 +10,8 @@
 require 'rubygems'
 gem 'test-unit'
 
+require 'tmpdir'
+require 'fileutils'
 require 'open3'
 require 'test/unit'
 require 'krb5_auth'
@@ -17,10 +19,19 @@ require 'krb5_auth'
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
     @@file = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
+
+    unless File.exists?(@@file)
+      temp = Dir.tmpdir + "/test.keytab"
+      @@file = "FILE:" + temp
+      FileUtils.touch(temp)
+    end
+
+    @@home_dir = ENV['HOME'] || ENV['USER_PROFILE']
   end
 
   def setup
     @keytab = Krb5Auth::Krb5::Keytab.new
+    @realm  = Krb5Auth::Kadm5::Config.new.realm
     @entry  = nil
     @name   = nil
   end
@@ -30,8 +41,30 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new("FILE:/bogus/keytab") }
   end
 
-  test "keytab name must be a string" do
+  test "using an invalid residual type causes an error" do
+    omit("Invalid residual type test skipped for now")
+    assert_raise(Krb5Auth::Krb5::Keytab::Exception){
+      @keytab = Krb5Auth::Krb5::Keytab.new("BOGUS:/bogus/keytab")
+    }
+  end
+
+  test "keytab name passed to constructor must be a string" do
     assert_raise(TypeError){ Krb5Auth::Krb5::Keytab.new(1) }
+  end
+
+  test "name basic functionality" do
+    assert_respond_to(@keytab, :name)
+    assert_kind_of(String, @keytab.name)
+  end
+
+  test "name is set to default name if no argument is passed to constructor" do
+    assert_equal(@keytab.name, @keytab.default_name)
+  end
+
+  test "name is set to value passed to constructor" do
+    temp = "FILE:" + Dir.tmpdir + "/test.keytab"
+    @keytab = Krb5Auth::Krb5::Keytab.new(temp)
+    assert_equal(@keytab.name, temp)
   end
 
   test "default_name basic functionality" do
@@ -53,7 +86,6 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "each method yields a keytab entry object" do
-    omit_unless(File.exists?(@@file), "default keytab file not found, skipping")
     array = []
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
@@ -66,16 +98,14 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "get_entry returns an entry if found in the keytab" do
-    omit_unless(File.exists?(@@file), "default keytab file not found, skipping")
-    @user = "testuser1@" + Krb5Auth::Krb5.new.default_realm
+    @user = "testuser1@" + @realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, @entry)
   end
 
   test "get_entry raises an error if no entry is found" do
-    omit_unless(File.exists?(@@file), "default keytab file not found, skipping")
-    @user = "bogus_user@" + Krb5Auth::Krb5.new.default_realm
+    @user = "bogus_user@" + @realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_raise(Krb5Auth::Krb5::Exception){ @keytab.get_entry(@user) }
   end
@@ -91,13 +121,13 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "add_entry can add a valid principal" do
-    @user = "testuser1@" + Krb5Auth::Krb5.new.default_realm
+    @user = "testuser1@" + @realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
   test "add_entry fails if an invalid user is added" do
-    @user = "bogus_user@" + Krb5Auth::Krb5.new.default_realm
+    @user = "bogus_user@" + @realm
     assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
     assert_raise(Krb5Auth::Krb5::Exception){ @keytab.add_entry(@user) }
   end
@@ -112,12 +142,13 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     array = []
     assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
-    assert_true(array.size > 1)
+    assert_true(array.size >= 1)
   end
 
   def teardown
     @keytab.close if @keytab
     @keytab = nil
     @entry  = nil
+    @realm  = nil
   end
 end
