@@ -140,7 +140,11 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
 
 /*
  * call-seq:
- *   keytab.add_entry(principal, vno = 0, enctype = nil)
+ *   keytab.add_entry(principal, vno = 0, enctype = 0)
+ *
+ * Adds +principal+ to the keytab file.
+ *--
+ * TODO: Create the keytab file if it does not exist.
  */
 static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
@@ -161,11 +165,19 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   kerror = krb5_parse_name(ptr->ctx, name, &entry.principal);
 
   if(kerror)
-    rb_raise(cKrb5Exception, "krb5_unparse_name: %s", error_message(kerror));
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
 
-  entry.vno = 0;
-  entry.key.enctype = 0;
-  entry.key.length  = 16;
+  if(NIL_P(v_vno))
+    entry.vno = 0;
+  else
+    entry.vno = NUM2INT(v_vno);
+
+  if(NIL_P(v_enctype))
+    entry.key.enctype = 0;
+  else
+    entry.key.enctype = NUM2INT(v_enctype);
+
+  entry.key.length = 16;
 
   kerror = krb5_kt_add_entry(
     ptr->ctx,
@@ -173,13 +185,9 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
     &entry
   );
 
-  if(kerror){
-    krb5_kt_free_entry(ptr->ctx, &entry);
-    rb_raise(cKrb5Exception, "krb5_kt_add_entry: %s", error_message(kerror));
-  }
+  if(kerror)
+    rb_raise(cKrb5KeytabException, "krb5_kt_add_entry: %s", error_message(kerror));
 
-  krb5_kt_free_entry(ptr->ctx, &entry);
-  
   return self;
 }
 
@@ -430,7 +438,7 @@ void Init_keytab(){
   cKrb5Keytab = rb_define_class_under(cKrb5, "Keytab", rb_cObject);
 
   /* The Keytab::Exception is typically raised if any of the Keytab methods fail. */
-  cKrb5KeytabException = rb_define_class_under(cKrb5Keytab, "Exception", rb_cObject);
+  cKrb5KeytabException = rb_define_class_under(cKrb5Keytab, "Exception", rb_eStandardError);
 
   // Allocation Function
 
@@ -446,13 +454,12 @@ void Init_keytab(){
 
   // Instance Methods
 
-  rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
+  rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
+  rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
-
-  //rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
-  //rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
   rb_define_method(cKrb5Keytab, "get_entry", rkrb5_keytab_get_entry, -1);
+  rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
 
   // Accessors
 
