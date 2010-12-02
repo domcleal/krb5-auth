@@ -18,14 +18,10 @@ require 'krb5_auth'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    @@file = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
+    temp = Dir.tmpdir + "/test.keytab"
+    File.delete(temp) if File.exists?(temp)
 
-    unless File.exists?(@@file)
-      temp = Dir.tmpdir + "/test.keytab"
-      @@file = "FILE:" + temp
-      File.delete(temp) if File.exists?(temp)
-    end
-
+    @@key_file = "FILE:" + temp
     @@home_dir = ENV['HOME'] || ENV['USER_PROFILE']
   end
 
@@ -80,14 +76,14 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 
   test "each basic functionality" do
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file) }
     assert_respond_to(@keytab, :each)
     assert_nothing_raised{ @keytab.each{} }
   end
 
   test "each method yields a keytab entry object" do
     array = []
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file) }
     assert_nothing_raised{ @keytab.each{ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
     assert_true(array.size >= 1)
@@ -99,7 +95,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
 
   test "get_entry returns an entry if found in the keytab" do
     @user = "testuser1@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     @keytab.add_entry(@user)
     assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, @entry)
@@ -107,7 +103,7 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
 
   test "get_entry raises an error if no entry is found" do
     @user = "bogus_user@" + @realm
-    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@file) }
+    assert_nothing_raised{ @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file) }
     assert_raise(Krb5Auth::Krb5::Exception){ @keytab.get_entry(@user) }
   end
 
@@ -122,52 +118,65 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
 
   test "add_entry can add a valid principal" do
     @user = "testuser2@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
+  test "add_entry accepts a vno" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_nothing_raised{ @keytab.add_entry(@user, 1) }
+  end
+
+  test "add_entry accepts a encoding type" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    enctype = Krb5Auth::Krb5::ENCTYPE_DES_HMAC_SHA1
+    assert_nothing_raised{ @keytab.add_entry(@user, 1, enctype) }
+  end
+
   test "add_entry requires at least one argument" do
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_raise(ArgumentError){ @keytab.add_entry }
   end
 
   test "first argument add_entry must be a string" do
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_raise(TypeError){ @keytab.add_entry(1) }
   end
 
   test "second argument to add_entry must be a number" do
     @user = "testuser2@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_raise(TypeError){ @keytab.add_entry(@user, "test") }
   end
 
   test "third argument to add_entry must be a number" do
     @user = "testuser2@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_raise(TypeError){ @keytab.add_entry(@user, 0, "test") }
   end
 
   test "add_entry accepts a maximum of three arguments" do
     @user = "testuser2@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_raise(ArgumentError){ @keytab.add_entry(@user, 0, 0, 0) }
   end
 
   test "add_entry does not fail if an bogus user is added" do
     @user = "bogususer@" + @realm
-    @keytab = Krb5Auth::Krb5::Keytab.new(@@file)
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){} }
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){} }
   end
 
   test "foreach singleton method yields keytab entry objects" do
     array = []
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@file){ |entry| array << entry } }
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){ |entry| array << entry } }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
     assert_true(array.size >= 1)
   end
