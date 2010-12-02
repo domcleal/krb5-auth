@@ -169,6 +169,67 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
+  test "remove_entry basic functionality" do
+    assert_respond_to(@keytab, :remove_entry)
+  end
+
+  test "remove_entry can add a valid principal" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    @keytab.add_entry(@user)
+
+    assert_nothing_raised{ @keytab.remove_entry(@user) }
+  end
+
+  test "remove_entry accepts a vno" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    @keytab.add_entry(@user, 1)
+    assert_nothing_raised{ @keytab.remove_entry(@user, 1) }
+  end
+
+  test "remove_entry accepts a encoding type" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    enctype = Krb5Auth::Krb5::ENCTYPE_DES_HMAC_SHA1
+    @keytab.add_entry(@user, 1, enctype)
+    assert_nothing_raised{ @keytab.remove_entry(@user, 1, enctype) }
+  end
+
+  test "remove_entry requires at least one argument" do
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_raise(ArgumentError){ @keytab.remove_entry }
+  end
+
+  test "first argument remove_entry must be a string" do
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_raise(TypeError){ @keytab.remove_entry(1) }
+  end
+
+  test "second argument to remove_entry must be a number" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_raise(TypeError){ @keytab.remove_entry(@user, "test") }
+  end
+
+  test "third argument to remove_entry must be a number" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_raise(TypeError){ @keytab.remove_entry(@user, 0, "test") }
+  end
+
+  test "remove_entry accepts a maximum of three arguments" do
+    @user = "testuser2@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_raise(ArgumentError){ @keytab.remove_entry(@user, 0, 0, 0) }
+  end
+
+  test "remove_entry does not fail if an bogus user is removed" do
+    @user = "bogususer@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_nothing_raised{ @keytab.remove_entry(@user) }
+  end
+
   test "foreach singleton method basic functionality" do
     assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
     assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){} }

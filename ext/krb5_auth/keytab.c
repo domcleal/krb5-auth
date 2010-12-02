@@ -138,7 +138,6 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
   krb5_keytab_entry entry;
-  krb5_principal principal;
   char* name;
   VALUE v_name, v_vno, v_enctype;
 
@@ -189,7 +188,6 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
   krb5_keytab_entry entry;
-  krb5_principal principal;
   char* name;
   VALUE v_name, v_vno, v_enctype;
 
