@@ -169,6 +169,14 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_nothing_raised{ @keytab.add_entry(@user) }
   end
 
+  test "add_entry can be called multiple times" do
+    @user = "bogususer@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_nothing_raised{ @keytab.add_entry(@user) }
+    assert_nothing_raised{ @keytab.add_entry(@user) }
+    assert_nothing_raised{ @keytab.add_entry(@user) }
+  end
+
   test "remove_entry basic functionality" do
     assert_respond_to(@keytab, :remove_entry)
   end
@@ -227,6 +235,21 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   test "remove_entry does not fail if an bogus user is removed" do
     @user = "bogususer@" + @realm
     @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_nothing_raised{ @keytab.remove_entry(@user) }
+  end
+
+  test "remove_entry can be called multiple times" do
+    @user = "testuser1@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    @keytab.add_entry(@user)
+    assert_nothing_raised{ @keytab.remove_entry(@user) }
+    assert_nothing_raised{ @keytab.remove_entry(@user) }
+  end
+
+  test "a principal can be added and removed" do
+    @user = "testuser1@" + @realm
+    @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
+    assert_nothing_raised{ @keytab.add_entry(@user) }
     assert_nothing_raised{ @keytab.remove_entry(@user) }
   end
 

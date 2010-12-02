@@ -149,6 +149,9 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
 
   name = StringValuePtr(v_name);
 
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
+
   kerror = krb5_parse_name(ptr->ctx, name, &entry.principal);
 
   if(kerror)
@@ -198,6 +201,9 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   Check_Type(v_name, T_STRING);
 
   name = StringValuePtr(v_name);
+
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
 
   kerror = krb5_parse_name(ptr->ctx, name, &entry.principal);
 
