@@ -132,9 +132,50 @@ static VALUE rkrb5_keytab_close(VALUE self){
 
 /*
  * call-seq:
- *   keytab.delete_entry(principal, vno = 0, enctype = nil)
+ *   keytab.remove_entry(principal, vno = 0, enctype = 0)
  */
 static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
+  RUBY_KRB5_KEYTAB* ptr;
+  krb5_error_code kerror;
+  krb5_keytab_entry entry;
+  krb5_principal principal;
+  char* name;
+  VALUE v_name, v_vno, v_enctype;
+
+  Data_Get_Struct(self, RUBY_KRB5_KEYTAB, ptr); 
+
+  rb_scan_args(argc, argv, "12", &v_name, &v_vno, &v_enctype);
+
+  Check_Type(v_name, T_STRING);
+
+  name = StringValuePtr(v_name);
+
+  kerror = krb5_parse_name(ptr->ctx, name, &entry.principal);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_parse_name: %s", error_message(kerror));
+
+  if(NIL_P(v_vno))
+    entry.vno = 0;
+  else
+    entry.vno = NUM2INT(v_vno);
+
+  if(NIL_P(v_enctype))
+    entry.key.enctype = 0;
+  else
+    entry.key.enctype = NUM2INT(v_enctype);
+
+  entry.key.length = 16;
+
+  kerror = krb5_kt_remove_entry(
+    ptr->ctx,
+    ptr->keytab,
+    &entry
+  );
+
+  if(kerror)
+    rb_raise(cKrb5KeytabException, "krb5_kt_add_entry: %s", error_message(kerror));
+
   return self;
 }
 
@@ -143,8 +184,6 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
  *   keytab.add_entry(principal, vno = 0, enctype = 0)
  *
  * Adds +principal+ to the keytab file.
- *--
- * TODO: Create the keytab file if it does not exist.
  */
 static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
