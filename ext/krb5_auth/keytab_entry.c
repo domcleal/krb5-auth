@@ -32,8 +32,39 @@ static VALUE rkrb5_kt_entry_initialize(VALUE self){
   return self;
 }
 
+/*
+ * A custom inspect method for nicer output.
+ */
+static VALUE rkrb5_kt_entry_inspect(VALUE self){
+  RUBY_KRB5_KT_ENTRY* ptr;
+  Data_Get_Struct(self, RUBY_KRB5_KT_ENTRY, ptr);
+  VALUE v_str;
+
+  v_str = rb_str_buf_new2("#<"); 
+  rb_str_buf_cat2(v_str, rb_obj_classname(self));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "principal=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@principal")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "timestamp=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@timestamp")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "vno=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@vno")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "key=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@key")));
+  rb_str_buf_cat2(v_str, " ");
+
+  return v_str;
+}
+
 void Init_keytab_entry(){
-  // The Krb5::Krb5::Keytab::Entry class encapsulates a Kerberos keytab entry.
+  // The Krb5Auth::Krb5::Keytab::Entry class encapsulates a Kerberos keytab entry.
   cKrb5KtEntry = rb_define_class_under(cKrb5Keytab, "Entry", rb_cObject);
 
   // Allocation function
@@ -42,7 +73,10 @@ void Init_keytab_entry(){
   // Constructor
   rb_define_method(cKrb5KtEntry, "initialize", rkrb5_kt_entry_initialize, 0);
 
-  // Krb5::Keytab::Entry Methods
+  // Instance Methods
+  rb_define_method(cKrb5KtEntry, "inspect", rkrb5_kt_entry_inspect, 0); 
+
+  // Accessors
   rb_define_attr(cKrb5KtEntry, "principal", 1, 1);
   rb_define_attr(cKrb5KtEntry, "timestamp", 1, 1);
   rb_define_attr(cKrb5KtEntry, "vno", 1, 1);

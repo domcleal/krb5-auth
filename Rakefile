@@ -96,6 +96,14 @@ namespace 'test' do
     t.verbose = true
   end
 
+  Rake::TestTask.new('keytab_entry') do |t|
+    task :keytab_entry => [:clean, :compile]
+    t.libs << 'ext' 
+    t.test_files = FileList['test/test_keytab_entry.rb']
+    t.warning = true
+    t.verbose = true
+  end
+
   Rake::TestTask.new('principal') do |t|
     task :principal => [:clean, :compile]
     t.libs << 'ext' 
