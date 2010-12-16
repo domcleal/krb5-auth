@@ -173,6 +173,19 @@ class TC_Krb5 < Test::Unit::TestCase
     assert_raise(Krb5Auth::Krb5::Exception){ @krb5.get_default_principal }
   end
 
+  test "get_permitted_enctypes basic functionality" do
+    assert_respond_to(@krb5, :get_permitted_enctypes)
+    assert_nothing_raised{ @krb5.get_permitted_enctypes }
+    assert_kind_of(Hash, @krb5.get_permitted_enctypes)
+  end
+
+  test "get_permitted_enctypes returns expected results" do
+    hash = @krb5.get_permitted_enctypes
+    assert_kind_of(Fixnum, hash.keys.first)
+    assert_kind_of(String, hash.values.first)
+    assert_true(hash.values.first.size > 0)
+  end
+
   def teardown
     @krb5.close
     @krb5 = nil
