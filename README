@@ -57,7 +57,8 @@
 = TODO
   Replace Struct::Principal with a Principal class with its own methods.
   Create a separate class for the replay cache.
-  Better credentials cache and keytab support.
+  Better credentials cache support.
+  Ability to add and delete keytab entries.
 
 = CAVEATS
   OS X users will probably need to install Kerberos manually and specify
