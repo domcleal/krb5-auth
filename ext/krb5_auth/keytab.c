@@ -131,9 +131,6 @@ static VALUE rkrb5_keytab_close(VALUE self){
 }
 
 /*
- * call-seq:
- *   keytab.remove_entry(principal, vno = 0, enctype = 0)
- */
 static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
@@ -176,17 +173,11 @@ static VALUE rkrb5_keytab_remove_entry(int argc, VALUE* argv, VALUE self){
   );
 
   if(kerror)
-    rb_raise(cKrb5KeytabException, "krb5_kt_add_entry: %s", error_message(kerror));
+    rb_raise(cKrb5KeytabException, "krb5_kt_remove_entry: %s", error_message(kerror));
 
   return self;
 }
 
-/*
- * call-seq:
- *   keytab.add_entry(principal, vno = 0, enctype = 0)
- *
- * Adds +principal+ to the keytab file.
- */
 static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
   RUBY_KRB5_KEYTAB* ptr;
   krb5_error_code kerror;
@@ -233,6 +224,7 @@ static VALUE rkrb5_keytab_add_entry(int argc, VALUE* argv, VALUE self){
 
   return self;
 }
+*/
 
 /*
  * call-seq:
@@ -497,12 +489,14 @@ void Init_keytab(){
 
   // Instance Methods
 
-  rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
   rb_define_method(cKrb5Keytab, "default_name", rkrb5_keytab_default_name, 0);
   rb_define_method(cKrb5Keytab, "close", rkrb5_keytab_close, 0);
   rb_define_method(cKrb5Keytab, "each", rkrb5_keytab_each, 0);
   rb_define_method(cKrb5Keytab, "get_entry", rkrb5_keytab_get_entry, -1);
-  rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
+
+  // TODO: Move these into Kadm5 and/or figure out how to set the vno properly.
+  // rb_define_method(cKrb5Keytab, "add_entry", rkrb5_keytab_add_entry, -1);
+  // rb_define_method(cKrb5Keytab, "remove_entry", rkrb5_keytab_remove_entry, -1);
 
   // Accessors
 
