@@ -386,10 +386,10 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
     kerror = krb5_kt_default_name(context, keytab_name, MAX_KEYTAB_NAME_LEN);
 
     if(kerror){
-      rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
-
       if(context)
         krb5_free_context(context);
+
+      rb_raise(cKrb5Exception, "krb5_kt_default_name: %s", error_message(kerror));
     }
   } 
   else{
@@ -404,10 +404,10 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
   );
 
   if(kerror){
-    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
-
     if(context)
       krb5_free_context(context);
+
+    rb_raise(cKrb5Exception, "krb5_kt_resolve: %s", error_message(kerror));
   }
 
   kerror = krb5_kt_start_seq_get(
@@ -417,13 +417,13 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
   );
 
   if(kerror){
-    rb_raise(cKrb5Exception, "krb5_kt_start_seq_get: %s", error_message(kerror));
-
     if(context)
       krb5_free_context(context);
 
     if(keytab)
       krb5_kt_close(context, keytab);
+
+    rb_raise(cKrb5Exception, "krb5_kt_start_seq_get: %s", error_message(kerror));
   }
 
   while((kerror = krb5_kt_next_entry(context, keytab, &entry, &cursor)) == 0){
@@ -450,13 +450,13 @@ static VALUE rkrb5_s_keytab_foreach(int argc, VALUE* argv, VALUE klass){
   );
 
   if(kerror){
-    rb_raise(cKrb5Exception, "krb5_kt_end_seq_get: %s", error_message(kerror));
-
     if(context)
       krb5_free_context(context);
 
     if(keytab)
       krb5_kt_close(context, keytab);
+
+    rb_raise(cKrb5Exception, "krb5_kt_end_seq_get: %s", error_message(kerror));
   }
 
   if(keytab)

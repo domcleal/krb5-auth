@@ -4,24 +4,38 @@
 # Test suite for the Krb5Auth::Krb5::Keytab class.
 #
 # At the moment this test suite assumes that there are two or more
-# principals in the keytab. Temporary keytab creation needs to be
-# handled in the startup method somehow.
+# principals in the keytab. Temporary keytab creation is handled using
+# pty + expect. You will need to ensure that you set the password
+# correctly and that testuser1 and testuser2 exist.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
 
 require 'tmpdir'
 require 'fileutils'
-require 'open3'
 require 'test/unit'
 require 'krb5_auth'
+require 'pty'
+require 'expect'
 
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
-    temp = Dir.tmpdir + "/test.keytab"
-    File.delete(temp) if File.exists?(temp)
+    file = Dir.tmpdir + "/test.keytab"
+    pass = 'asdf' # Alter as needed
 
-    @@key_file = "FILE:" + temp
+    PTY.spawn('kadmin') do |reader, writer, pid|
+      reader.expect(/Password for.*:\s+/i)
+      writer.puts(pass)
+      reader.expect(/kadmin:\s+/i)
+
+      writer.puts('ktadd -k /tmp/test.keytab testuser1')
+      reader.expect(/kadmin:\s+/i)
+
+      writer.puts('ktadd -k /tmp/test.keytab testuser2')
+      reader.expect(/kadmin:\s+/i)
+    end
+
+    @@key_file = "FILE:" + file
     @@home_dir = ENV['HOME'] || ENV['USER_PROFILE']
   end
 
@@ -96,7 +110,6 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   test "get_entry returns an entry if found in the keytab" do
     @user = "testuser1@" + @realm
     @keytab = Krb5Auth::Krb5::Keytab.new(@@key_file)
-    #@keytab.add_entry(@user)
     assert_nothing_raised{ @entry = @keytab.get_entry(@user) }
     assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, @entry)
   end
@@ -112,7 +125,21 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
     assert_alias_method(@keytab, :find, :get_entry)
   end
 
+  test "foreach singleton method basic functionality" do
+    assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){} }
+  end
+
+  test "foreach singleton method yields keytab entry objects" do
+    array = []
+    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){ |entry| array << entry } }
+    assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
+    assert_true(array.size >= 1)
+  end
+
 =begin
+  # These tests skipped until further notice.
+
   test "add_entry basic functionality" do
     assert_respond_to(@keytab, :add_entry)
   end
@@ -255,22 +282,16 @@ class TC_Krb5_Keytab < Test::Unit::TestCase
   end
 =end
 
-  test "foreach singleton method basic functionality" do
-    assert_respond_to(Krb5Auth::Krb5::Keytab, :foreach)
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){} }
-  end
-
-  test "foreach singleton method yields keytab entry objects" do
-    array = []
-    assert_nothing_raised{ Krb5Auth::Krb5::Keytab.foreach(@@key_file){ |entry| array << entry } }
-    assert_kind_of(Krb5Auth::Krb5::Keytab::Entry, array[0])
-    assert_true(array.size >= 1)
-  end
-
   def teardown
     @keytab.close if @keytab
     @keytab = nil
     @entry  = nil
     @realm  = nil
+  end
+
+  def self.shutdown
+    File.delete(@@key_file) if File.exists?(@@key_file)
+    @@key_file = nil
+    @@home_dir = nil
   end
 end
