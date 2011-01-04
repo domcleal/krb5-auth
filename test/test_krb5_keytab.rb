@@ -5,8 +5,7 @@
 #
 # At the moment this test suite assumes that there are two or more
 # principals in the keytab. Temporary keytab creation is handled using
-# pty + expect. You will need to ensure that you set the password
-# correctly and that testuser1 and testuser2 exist.
+# pty + expect.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -21,18 +20,16 @@ require 'expect'
 class TC_Krb5_Keytab < Test::Unit::TestCase
   def self.startup
     file = Dir.tmpdir + "/test.keytab"
-    pass = 'asdf' # Alter as needed
 
-    PTY.spawn('kadmin') do |reader, writer, pid|
-      reader.expect(/Password for.*:\s+/i)
-      writer.puts(pass)
-      reader.expect(/kadmin:\s+/i)
+    PTY.spawn('kadmin.local') do |reader, writer, pid|
+      reader.gets
+      reader.expect(/local:\s+/)
 
-      writer.puts('ktadd -k /tmp/test.keytab testuser1')
-      reader.expect(/kadmin:\s+/i)
+      writer.puts("ktadd -k #{file} testuser1")
+      reader.expect(/local:\s+/)
 
-      writer.puts('ktadd -k /tmp/test.keytab testuser2')
-      reader.expect(/kadmin:\s+/i)
+      writer.puts("ktadd -k #{file} testuser2")
+      reader.expect(/local:\s+/)
     end
 
     @@key_file = "FILE:" + file
