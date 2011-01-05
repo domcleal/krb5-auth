@@ -11,7 +11,7 @@ require 'krb5_auth'
 
 class TC_Kadm5_Policy < Test::Unit::TestCase
   def setup
-    @policy = Krb5Auth::Kadm5::Policy.new('test')
+    @policy = Krb5Auth::Kadm5::Policy.new(:name => 'test', :max_life => 10000)
   end
 
   test 'policy name basic functionality' do
@@ -24,94 +24,97 @@ class TC_Kadm5_Policy < Test::Unit::TestCase
   end
 
   test 'policy name must be a string' do
-    assert_raise(TypeError){ Krb5Auth::Kadm5::Policy.new(1) }
+    assert_raise(TypeError){ Krb5Auth::Kadm5::Policy.new(:name => 1) }
   end
 
-  test 'pw_min_life basic functionality' do
-    assert_respond_to(@policy, :pw_min_life)
-    assert_nothing_raised{ @policy.pw_min_life }
+  test 'policy name must be present' do
+    assert_raise(ArgumentError){ Krb5Auth::Kadm5::Policy.new(:max_life => 10000) }
   end
 
-  test 'pw_min_life setter basic functionality' do
-    assert_nothing_raised{ @policy.pw_min_life = 1000 }
-    assert_equal(1000, @policy.pw_min_life = 1000)
-    assert_equal(1000, @policy.pw_min_life)
+  test 'min_life basic functionality' do
+    assert_respond_to(@policy, :min_life)
+    assert_nothing_raised{ @policy.min_life }
   end
 
-  test 'pw_min_life must be a number if not nil' do
-    assert_raise(TypeError){ @policy.pw_min_life = 'test' }
+  test 'min_life must be a number if not nil' do
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5::Policy.new(:name => 'test', :min_life => 'test')
+    }
   end
 
-  test 'pw_min_life can be set to nil explicitly' do
-    assert_nothing_raised{ @policy.pw_min_life = nil }
+  test 'max_life basic functionality' do
+    assert_respond_to(@policy, :max_life)
+    assert_nothing_raised{ @policy.max_life }
   end
 
-  test 'pw_max_life basic functionality' do
-    assert_respond_to(@policy, :pw_max_life)
-    assert_nothing_raised{ @policy.pw_max_life }
+  test 'max_life must be a number if not nil' do
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5::Policy.new(:name => 'test', :max_life => 'test')
+    }
   end
 
-  test 'pw_max_life setter basic functionality' do
-    assert_nothing_raised{ @policy.pw_max_life = 1000 }
-    assert_equal(1000, @policy.pw_max_life = 1000)
-    assert_equal(1000, @policy.pw_max_life)
+  test 'min_length basic functionality' do
+    assert_respond_to(@policy, :min_length)
+    assert_nothing_raised{ @policy.min_length }
   end
 
-  test 'pw_max_life must be a number if not nil' do
-    assert_raise(TypeError){ @policy.pw_max_life = 'test' }
+  test 'min_length must be a number if not nil' do
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5::Policy.new(:name => 'test', :min_length => 'test')
+    }
   end
 
-  test 'pw_max life can be set to nil explicitly' do
-    assert_nothing_raised{ @policy.pw_max_life = nil }
+  test 'min_classes basic functionality' do
+    assert_respond_to(@policy, :min_classes)
+    assert_nothing_raised{ @policy.min_classes }
   end
 
-  test 'pw_min_length basic functionality' do
-    assert_respond_to(@policy, :pw_min_length)
-    assert_nothing_raised{ @policy.pw_min_length }
+  test 'min_classes must be a number if not nil' do
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5::Policy.new(:name => 'test', :min_classes => 'test')
+    }
   end
 
-  test 'pw_min_length setter basic functionality' do
-    assert_nothing_raised{ @policy.pw_min_length = 10 }
-    assert_equal(10, @policy.pw_min_length = 10)
-    assert_equal(10, @policy.pw_min_length)
+  test 'history_num basic functionality' do
+    assert_respond_to(@policy, :history_num)
+    assert_nothing_raised{ @policy.history_num }
   end
 
-  test 'pw_min_length must be a number if not nil' do
-    assert_raise(TypeError){ @policy.pw_min_length = 'test' }
+  test 'history_num must be a number if not nil' do
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5::Policy.new(:name => 'test', :history_num => 'test')
+    }
   end
 
-  test 'pw_min_length can be set to nil explicitly' do
-    assert_nothing_raised{ @policy.pw_min_length = nil }
+  test 'instance variables are set as expected from the constructor' do
+    @policy = Krb5Auth::Kadm5::Policy.new(
+      :name        => 'test',
+      :min_life    => 8888,
+      :max_life    => 9999,
+      :min_length  => 5,
+      :min_classes => 2,
+      :history_num => 7
+    )
+
+    assert_equal('test', @policy.name)
+    assert_equal(8888, @policy.min_life)
+    assert_equal(9999, @policy.max_life)
+    assert_equal(5, @policy.min_length)
+    assert_equal(2, @policy.min_classes)
+    assert_equal(7, @policy.history_num)
   end
 
-  test 'pw_min_classes basic functionality' do
-    assert_respond_to(@policy, :pw_min_classes)
-    assert_nothing_raised{ @policy.pw_min_classes }
+  test 'constructor requires one argument' do
+    assert_raise(ArgumentError){ Krb5Auth::Kadm5::Policy.new }
+    assert_raise(ArgumentError){ Krb5Auth::Kadm5::Policy.new('foo', 'bar') }
   end
 
-  test 'pw_history_num basic functionality' do
-    assert_respond_to(@policy, :pw_history_num)
-    assert_nothing_raised{ @policy.pw_history_num }
+  test 'constructor requires a hash argument' do
+    assert_raise(TypeError){ Krb5Auth::Kadm5::Policy.new('test') }
   end
 
-  test 'policy_refcnt basic functionality' do
-    assert_respond_to(@policy, :policy_refcnt)
-    assert_nothing_raised{ @policy.policy_refcnt }
-  end
-
-  test 'pw_max_fail basic functionality' do
-    assert_respond_to(@policy, :pw_max_fail)
-    assert_nothing_raised{ @policy.pw_max_fail }
-  end
-
-  test 'pw_failcnt_interval basic functionality' do
-    assert_respond_to(@policy, :pw_failcnt_interval)
-    assert_nothing_raised{ @policy.pw_failcnt_interval }
-  end
-
-  test 'pw_lockout_duration basic functionality' do
-    assert_respond_to(@policy, :pw_lockout_duration)
-    assert_nothing_raised{ @policy.pw_lockout_duration }
+  test 'constructor raises an error if the hash is empty' do
+    assert_raise(ArgumentError){ Krb5Auth::Kadm5::Policy.new({}) }
   end
 
   def teardown
