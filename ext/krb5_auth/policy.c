@@ -24,8 +24,12 @@ static VALUE rkadm5_policy_allocate(VALUE klass){
  * call-seq:
  *   Krb5Auth::Kadm5::Policy.new(options)
  *
- * Creates and returns a new policy object using +options+ you choose to
- * pass, where +options+ is a hash. The possible options are:
+ * Returns a new policy object using +options+ you choose to pass, where
+ * the +options+ argument is a hash. This does NOT actually create the policy
+ * object within Kerberos. To do that pass your Policy object to the
+ * Kadm5.create_policy method.
+ *
+ * The possible options are:
  *
  * * name        - the name of the policy (mandatory) 
  * * min_life    - minimum lifetime of a password
@@ -109,13 +113,13 @@ void Init_policy(){
   rb_define_attr(cKadm5Policy, "policy", 1, 0);
 
   /* The minimum password lifetime, in seconds. */
-  rb_define_attr(cKadm5Policy, "min_life", 1, 0);
+  rb_define_attr(cKadm5Policy, "min_life", 1, 1);
 
   /* The maximum duration of a password, in seconds. */
-  rb_define_attr(cKadm5Policy, "max_life", 1, 0);
+  rb_define_attr(cKadm5Policy, "max_life", 1, 1);
 
   /* The minimum password length. */
-  rb_define_attr(cKadm5Policy, "min_length", 1, 0);
+  rb_define_attr(cKadm5Policy, "min_length", 1, 1);
 
   /* The minimum number of character classes (1-5). */
   rb_define_attr(cKadm5Policy, "min_classes", 1, 1);
