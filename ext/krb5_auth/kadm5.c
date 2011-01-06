@@ -487,11 +487,16 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
  *   kadm5.create_policy(policy)
  *
  * Creates a new Kerberos policy based on the Policy object.
+ *
+ * Example:
+ *
+ *   policy = Krb5Auth::Kadm5::Policy.new(:name => 'test', :min_length => 5)
+ *   kadm5.create_policy(policy)
  */
 static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
   RUBY_KADM5* ptr;
   RUBY_KADM5_POLICY* pptr;
-  krb5_error_code kerror;
+  kadm5_ret_t kerror;
   long mask = KADM5_POLICY;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
@@ -515,7 +520,78 @@ static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
   kerror = kadm5_create_policy(ptr->handle, &pptr->policy, mask);
 
   if(kerror)
-    rb_raise(cKadm5Exception, "krb5_create_policy: %s (%li)", error_message(kerror), kerror);
+    rb_raise(cKadm5Exception, "kadm5_create_policy: %s (%li)", error_message(kerror), kerror);
+
+  return self;
+}
+
+/*
+ * call-seq:
+ *   kadm5.delete_policy(name)
+ *
+ * Deletes the Kerberos policy +name+.
+ *
+ * Example:
+ *
+ *   kadm5.delete_policy('test')
+ */
+static VALUE rkadm5_delete_policy(VALUE self, VALUE v_policy){
+  RUBY_KADM5* ptr;
+  kadm5_ret_t kerror;
+  char* policy;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  policy = StringValuePtr(v_policy);
+
+  kerror = kadm5_delete_policy(ptr->handle, policy);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_delete_policy: %s (%li)", error_message(kerror), kerror);
+
+  return self;
+}
+
+/*
+ * call-seq:
+ *   kadm5.modify_policy(policy)
+ *
+ * Modify an existing Kerberos policy using a +policy+ object.
+ *
+ * Example:
+ *
+ *   policy = Krb5Auth::Kadm5::Policy.find('test')
+ *   policy.max_length = 1024
+ *   kadm5.modify_policy(policy)
+ */
+static VALUE rkadm5_modify_policy(VALUE self, VALUE v_policy){
+  RUBY_KADM5* ptr;
+  RUBY_KADM5_POLICY* pptr;
+  kadm5_ret_t kerror;
+  long mask = KADM5_POLICY;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+  Data_Get_Struct(v_policy, RUBY_KADM5_POLICY, pptr);
+
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
+
+  if(pptr->policy.pw_min_classes)
+    mask |= KADM5_PW_MIN_CLASSES;
+
+  if(pptr->policy.pw_min_length)
+    mask |= KADM5_PW_MIN_LENGTH;
+
+  if(pptr->policy.pw_min_life)
+    mask |= KADM5_PW_MIN_LIFE;
+
+  if(pptr->policy.pw_max_life)
+    mask |= KADM5_PW_MAX_LIFE;
+
+  kerror = kadm5_modify_policy(ptr->handle, &pptr->policy, mask);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_modify_policy: %s (%li)", error_message(kerror), kerror);
 
   return self;
 }
@@ -545,9 +621,11 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "close", rkadm5_close, 0);
   rb_define_method(cKadm5, "create_policy", rkadm5_create_policy, 1);
   rb_define_method(cKadm5, "create_principal", rkadm5_create_principal, 2);
+  rb_define_method(cKadm5, "delete_policy", rkadm5_delete_policy, 1);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "find_principal", rkadm5_find_principal, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
+  rb_define_method(cKadm5, "modify_policy", rkadm5_modify_policy, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
   // Aliases
