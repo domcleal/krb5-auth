@@ -312,6 +312,9 @@ static VALUE rkadm5_close(VALUE self){
   if(ptr->ctx)
     krb5_free_context(ptr->ctx);
 
+  if(ptr->handle)
+    kadm5_destroy(ptr->handle);
+
   ptr->ctx    = NULL;
   ptr->princ  = NULL;
   ptr->handle = NULL;
