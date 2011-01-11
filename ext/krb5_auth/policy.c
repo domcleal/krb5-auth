@@ -71,25 +71,40 @@ static VALUE rkadm5_policy_init(VALUE self, VALUE v_options){
     ptr->policy.pw_min_life = NUM2LONG(v_minlife);
     rb_iv_set(self, "@min_life", v_minlife);
   }
+  else{
+    rb_iv_set(self, "@min_life", Qnil);
+  }
 
   if(!NIL_P(v_maxlife)){
     ptr->policy.pw_max_life = NUM2LONG(v_maxlife);
     rb_iv_set(self, "@max_life", v_maxlife);
+  }
+  else{
+    rb_iv_set(self, "@max_life", Qnil);
   }
   
   if(!NIL_P(v_minlength)){
     ptr->policy.pw_min_length = NUM2LONG(v_minlength);
     rb_iv_set(self, "@min_length", v_minlength);
   }
+  else{
+    rb_iv_set(self, "@min_length", Qnil);
+  }
 
   if(!NIL_P(v_minclasses)){
     ptr->policy.pw_min_classes = NUM2LONG(v_minclasses);
     rb_iv_set(self, "@min_classes", v_minclasses);
   }
+  else{
+    rb_iv_set(self, "@min_classes", Qnil);
+  }
 
   if(!NIL_P(v_historynum)){
     ptr->policy.pw_history_num = NUM2LONG(v_historynum);
     rb_iv_set(self, "@history_num", v_historynum);
+  }
+  else{
+    rb_iv_set(self, "@history_num", Qnil);
   }
 
   return self;
