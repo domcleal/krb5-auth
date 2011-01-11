@@ -592,8 +592,8 @@ static VALUE rkadm5_delete_policy(VALUE self, VALUE v_policy){
  * Get and return a Policy object for +name+. If the +name+ cannot be found,
  * then an exception is raised.
  *
- * This method is nearly identical to kadm5.find, except that method returns
- * nil if not found.
+ * This method is nearly identical to kadm5.find_policy, except that method
+ * returns nil if not found.
  */
 static VALUE rkadm5_get_policy(VALUE self, VALUE v_name){
   RUBY_KADM5* ptr;
@@ -637,8 +637,59 @@ static VALUE rkadm5_get_policy(VALUE self, VALUE v_name){
   return v_policy;
 }
 
+/*
+ * call-seq:
+ *   kadm5.find_policy(name)
+ *
+ * Get and return a Policy object for +name+. If the +name+ cannot be found,
+ * then nil is returned.
+ *
+ * This method is nearly identical to kadm5.get_policy, except that method
+ * raises an exception if not found.
+ */
 static VALUE rkadm5_find_policy(VALUE self, VALUE v_name){
-  return self;
+  RUBY_KADM5* ptr;
+  VALUE v_policy = Qnil;
+  kadm5_policy_ent_rec ent;
+  kadm5_ret_t kerror;
+  char* policy_name;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+  memset(&ent, 0, sizeof(ent));
+
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
+
+  policy_name = StringValuePtr(v_name);
+
+  kerror = kadm5_get_policy(ptr->handle, policy_name, &ent); 
+
+  // Return nil if not found rather than raising an error.
+  if(kerror){
+    if(kerror != KADM5_UNK_POLICY){
+      rb_raise(
+        cKadm5Exception,
+        "kadm5_get_policy: %s (%li)", error_message(kerror), kerror
+      );
+    }
+  }
+  else{
+    VALUE v_arg[1];
+    VALUE v_hash = rb_hash_new();
+
+    rb_hash_aset(v_hash, rb_str_new2("name"), rb_str_new2(ent.policy));
+    rb_hash_aset(v_hash, rb_str_new2("min_life"), LONG2FIX(ent.pw_min_life));
+    rb_hash_aset(v_hash, rb_str_new2("max_life"), LONG2FIX(ent.pw_max_life));
+    rb_hash_aset(v_hash, rb_str_new2("min_length"), LONG2FIX(ent.pw_min_length));
+    rb_hash_aset(v_hash, rb_str_new2("min_classes"), LONG2FIX(ent.pw_min_classes));
+    rb_hash_aset(v_hash, rb_str_new2("history_num"), LONG2FIX(ent.pw_history_num));
+
+    v_arg[0] = v_hash;
+
+    v_policy = rb_class_new_instance(1, v_arg, cKadm5Policy);
+  }
+
+  return v_policy;
 }
 
 /*
@@ -713,7 +764,7 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "delete_policy", rkadm5_delete_policy, 1);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "find_principal", rkadm5_find_principal, 1);
-  //rb_define_method(cKadm5, "find_policy", rkadm5_find_policy, 1);
+  rb_define_method(cKadm5, "find_policy", rkadm5_find_policy, 1);
   rb_define_method(cKadm5, "get_policy", rkadm5_get_policy, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
   rb_define_method(cKadm5, "modify_policy", rkadm5_modify_policy, 1);
