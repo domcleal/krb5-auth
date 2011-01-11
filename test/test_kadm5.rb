@@ -35,7 +35,9 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     @pass = @@info.passwd
     @kadm = nil
     @princ = nil
+    @policy = nil
     @test_princ = "zztop"
+    @test_policy = "test_policy"
 
     @keytab = Krb5Auth::Krb5::Keytab.new.default_name.split(':').last
 
@@ -159,6 +161,65 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(Krb5Auth::Kadm5::Exception){ @kadm5.set_password('bogususer', 'xxxyyy') }
   end
 
+  ### Policy
+
+  test "create_policy basic functionality" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_respond_to(@kadm, :create_policy)
+  end
+
+  test "create_policy accepts a Policy object" do
+    hash = {:name => @test_policy, :min_length => 5, :max_life => 10000, :min_classes => 2}
+    policy = Krb5Auth::Kadm5::Policy.new(hash)
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nothing_raised{ @kadm.create_policy(policy) }
+  end
+
+  test "create_policy accepts a hash" do
+    hash = {:name => @test_policy, :min_length => 5, :max_life => 10000, :min_classes => 2}
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nothing_raised{ @kadm.create_policy(hash) }
+  end
+
+  test "policy can be found after creation" do
+    hash = {:name => @test_policy, :min_length => 5, :max_life => 10000, :min_classes => 2}
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    @kadm.create_policy(hash)
+    assert_nothing_raised{ @kadm.get_policy(@test_policy) }
+  end
+
+  test "create_policy only accepts one argument" do
+    hash = {:name => @test_policy, :min_length => 5, :max_life => 10000, :min_classes => 2}
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_raise(ArgumentError){ @kadm.create_policy(hash, hash) }
+  end
+
+  test "attempting to create a policy that already exists raises an error" do
+    hash = {:name => @test_policy, :min_length => 5, :max_life => 10000, :min_classes => 2}
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_nothing_raised{ @kadm.create_policy(hash) }
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.create_policy(hash) }
+  end
+
+  test "delete_policy basic functionality" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_respond_to(@kadm, :delete_policy)
+  end
+
+  test "delete_policy works as expected" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_nothing_raised{ @kadm.create_policy(:name => @test_policy) }
+    assert_nothing_raised{ @kadm.delete_policy(@test_policy) }
+  end
+
+  test "delete_policy takes one argument and only one argument" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_raise(ArgumentError){ @kadm.delete_policy }
+    assert_raise(ArgumentError){ @kadm.delete_policy(@test_policy, @test_policy) }
+  end
+
+  ### Principal
+
   test "create_principal basic functionality" do
     @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
     assert_respond_to(@kadm, :create_principal)
@@ -227,10 +288,16 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(ArgumentError){ @kadm.find_principal(@user, @user) }
   end
 
-  test "find is an alias for find_principal" do
+  test "get_policy basic functionality" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
-    assert_respond_to(@kadm, :find)
-    assert_alias_method(@kadm, :find, :find_principal)
+    assert_respond_to(@kadm, :get_policy)
+  end
+
+  test "get_policy returns a Policy object if found" do
+    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nothing_raised{ @kadm.create_policy(:name => @test_policy, :min_length => 5) }
+    assert_nothing_raised{ @policy = @kadm.get_policy(@test_policy) }
+    assert_kind_of(Krb5Auth::Kadm5::Policy, @policy)
   end
 
   test "get_principal basic functionality" do
@@ -291,13 +358,15 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   def teardown
     if @kadm
       @kadm.delete_principal(@test_princ) rescue nil
+      @kadm.delete_policy(@test_policy) rescue nil
       @kadm.close
     end
 
-    @user  = nil
-    @pass  = nil
-    @kadm  = nil
-    @princ = nil
+    @user   = nil
+    @pass   = nil
+    @kadm   = nil
+    @princ  = nil
+    @policy = nil
   end
 
   def self.shutdown

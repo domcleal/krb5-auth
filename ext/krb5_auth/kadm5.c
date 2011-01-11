@@ -493,34 +493,64 @@ static VALUE rkadm5_get_principal(VALUE self, VALUE v_user){
  *
  * Example:
  *
+ *   # Using a Policy object
  *   policy = Krb5Auth::Kadm5::Policy.new(:name => 'test', :min_length => 5)
  *   kadm5.create_policy(policy)
+ *
+ *   # Using a hash
+ *   kadm5.create_policy(:name => 'test', :min_length => 5)
  */
 static VALUE rkadm5_create_policy(VALUE self, VALUE v_policy){
   RUBY_KADM5* ptr;
-  RUBY_KADM5_POLICY* pptr;
   kadm5_ret_t kerror;
+  kadm5_policy_ent_rec ent;
   long mask = KADM5_POLICY;
+  VALUE v_name, v_min_classes, v_min_life, v_max_life, v_min_length, v_history_num;
 
   Data_Get_Struct(self, RUBY_KADM5, ptr);
-  Data_Get_Struct(v_policy, RUBY_KADM5_POLICY, pptr);
 
-  if(!ptr->ctx)
-    rb_raise(cKadm5Exception, "no context has been established");
+  // Allow a hash or a Policy object
+  if(rb_obj_is_kind_of(v_policy, rb_cHash)){
+    VALUE v_args[1];
+    v_args[0] = v_policy;
+    v_policy = rb_class_new_instance(1, v_args, cKadm5Policy);
+  }
 
-  if(pptr->policy.pw_min_classes)
+  v_name        = rb_iv_get(v_policy, "@policy");
+  v_min_classes = rb_iv_get(v_policy, "@min_classes");
+  v_min_length  = rb_iv_get(v_policy, "@min_length");
+  v_min_life    = rb_iv_get(v_policy, "@min_life");
+  v_max_life    = rb_iv_get(v_policy, "@max_life");
+  v_history_num = rb_iv_get(v_policy, "@history_num");
+
+  ent.policy = StringValuePtr(v_name);
+
+  if(RTEST(v_min_classes)){
     mask |= KADM5_PW_MIN_CLASSES;
-
-  if(pptr->policy.pw_min_length)
+    ent.pw_min_classes = NUM2LONG(v_min_classes);
+  }
+    
+  if(RTEST(v_min_length)){
     mask |= KADM5_PW_MIN_LENGTH;
+    ent.pw_min_length = NUM2LONG(v_min_length);
+  }
 
-  if(pptr->policy.pw_min_life)
+  if(RTEST(v_min_life)){
     mask |= KADM5_PW_MIN_LIFE;
+    ent.pw_min_life = NUM2LONG(v_min_life);
+  }
 
-  if(pptr->policy.pw_max_life)
+  if(RTEST(v_max_life)){
     mask |= KADM5_PW_MAX_LIFE;
+    ent.pw_max_life = NUM2LONG(v_max_life);
+  }
 
-  kerror = kadm5_create_policy(ptr->handle, &pptr->policy, mask);
+  if(RTEST(v_history_num)){
+    mask |= KADM5_PW_HISTORY_NUM;
+    ent.pw_max_life = NUM2LONG(v_history_num);
+  }
+
+  kerror = kadm5_create_policy(ptr->handle, &ent, mask);
 
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_create_policy: %s (%li)", error_message(kerror), kerror);
@@ -552,6 +582,62 @@ static VALUE rkadm5_delete_policy(VALUE self, VALUE v_policy){
   if(kerror)
     rb_raise(cKadm5Exception, "kadm5_delete_policy: %s (%li)", error_message(kerror), kerror);
 
+  return self;
+}
+
+/*
+ * call-seq:
+ *   kadm5.get_policy(name)
+ *
+ * Get and return a Policy object for +name+. If the +name+ cannot be found,
+ * then an exception is raised.
+ *
+ * This method is nearly identical to kadm5.find, except that method returns
+ * nil if not found.
+ */
+static VALUE rkadm5_get_policy(VALUE self, VALUE v_name){
+  RUBY_KADM5* ptr;
+  VALUE v_policy = Qnil;
+  kadm5_policy_ent_rec ent;
+  kadm5_ret_t kerror;
+  char* policy_name;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+  memset(&ent, 0, sizeof(ent));
+
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
+
+  policy_name = StringValuePtr(v_name);
+
+  kerror = kadm5_get_policy(ptr->handle, policy_name, &ent); 
+
+  if(kerror){
+    rb_raise(
+      cKadm5Exception,
+      "kadm5_get_policy: %s (%li)", error_message(kerror), kerror
+    );
+  }
+  else{
+    VALUE v_arg[1];
+    VALUE v_hash = rb_hash_new();
+
+    rb_hash_aset(v_hash, rb_str_new2("name"), rb_str_new2(ent.policy));
+    rb_hash_aset(v_hash, rb_str_new2("min_life"), LONG2FIX(ent.pw_min_life));
+    rb_hash_aset(v_hash, rb_str_new2("max_life"), LONG2FIX(ent.pw_max_life));
+    rb_hash_aset(v_hash, rb_str_new2("min_length"), LONG2FIX(ent.pw_min_length));
+    rb_hash_aset(v_hash, rb_str_new2("min_classes"), LONG2FIX(ent.pw_min_classes));
+    rb_hash_aset(v_hash, rb_str_new2("history_num"), LONG2FIX(ent.pw_history_num));
+
+    v_arg[0] = v_hash;
+
+    v_policy = rb_class_new_instance(1, v_arg, cKadm5Policy);
+  }
+
+  return v_policy;
+}
+
+static VALUE rkadm5_find_policy(VALUE self, VALUE v_name){
   return self;
 }
 
@@ -627,13 +713,11 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "delete_policy", rkadm5_delete_policy, 1);
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "find_principal", rkadm5_find_principal, 1);
+  //rb_define_method(cKadm5, "find_policy", rkadm5_find_policy, 1);
+  rb_define_method(cKadm5, "get_policy", rkadm5_get_policy, 1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
   rb_define_method(cKadm5, "modify_policy", rkadm5_modify_policy, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
-
-  // Aliases
-
-  rb_define_alias(cKadm5, "find", "find_principal");
 
   // Constants
 
