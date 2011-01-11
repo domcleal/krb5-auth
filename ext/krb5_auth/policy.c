@@ -110,6 +110,50 @@ static VALUE rkadm5_policy_init(VALUE self, VALUE v_options){
   return self;
 }
 
+/*
+ * call-seq:
+ *   policy.inspect
+ *
+ * A custom inspect method for Policy objects.
+ */
+static VALUE rkadm5_policy_inspect(VALUE self){
+  RUBY_KADM5_POLICY* ptr;
+  VALUE v_str;
+
+  Data_Get_Struct(self, RUBY_KADM5_POLICY, ptr);
+
+  v_str = rb_str_buf_new2("#<");
+  rb_str_buf_cat2(v_str, rb_obj_classname(self));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "policy=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@policy")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "min_life=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@min_life")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "max_life=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@max_life")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "min_length=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@min_length")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "min_classes=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@min_classes")));
+  rb_str_buf_cat2(v_str, " ");
+
+  rb_str_buf_cat2(v_str, "history_num=");
+  rb_str_buf_append(v_str, rb_inspect(rb_iv_get(self, "@history_num")));
+
+  rb_str_buf_cat2(v_str, ">");
+  
+  return v_str;
+}
+
 void Init_policy(){
   /* The Krb5Auth::Kadm5::Policy class encapsulates a Kerberos policy. */
   cKadm5Policy = rb_define_class_under(cKadm5, "Policy", rb_cObject);
@@ -121,6 +165,10 @@ void Init_policy(){
   // Initialization Function
 
   rb_define_method(cKadm5Policy, "initialize", rkadm5_policy_init, 1);
+
+  // Instance methods
+
+  rb_define_method(cKadm5Policy, "inspect", rkadm5_policy_inspect, 0);
 
   // Accessors
 
