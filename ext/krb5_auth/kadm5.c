@@ -118,7 +118,6 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
       ptr->ctx,
       user,
       pass,
-      //KADM5_ADMIN_SERVICE,
       service,
       NULL,
       KADM5_STRUCT_VERSION,
@@ -130,7 +129,6 @@ static VALUE rkadm5_initialize(VALUE self, VALUE v_opts){
     kerror = kadm5_init_with_password(
       user,
       pass,
-      //KADM5_ADMIN_SERVICE,
       service,
       NULL,
       KADM5_STRUCT_VERSION,
@@ -830,6 +828,72 @@ static VALUE rkadm5_get_principals(int argc, VALUE* argv, VALUE self){
   return v_array;
 }
 
+/*
+ * call-seq:
+ *   kadm5.get_privileges(:strings => false)
+ *
+ * Returns a numeric bitmask indicating the caller's privileges. If the
+ * +strings+ option is true, then an array of human readable strings are
+ * returned instead.
+ *
+ * The possible values, and their string equivalent, are:
+ *
+ * KADM5_PRIV_GET    (0x01) => "GET"
+ * KADM5_PRIV_ADD    (0x02) => "ADD"
+ * KADM5_PRIV_MODIFY (0x04) => "MODIFY"
+ * KADM5_PRIV_DELETE (0x08) => "DELETE"
+ */
+static VALUE rkadm5_get_privs(int argc, VALUE* argv, VALUE self){
+  RUBY_KADM5* ptr;
+  VALUE v_return = Qnil;
+  VALUE v_strings = Qfalse;
+  kadm5_ret_t kerror;
+  int i;
+  long privs;
+  int result = 0;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  rb_scan_args(argc, argv, "01", &v_strings);
+
+  kerror = kadm5_get_privs(ptr->handle, &privs); 
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_get_privs: %s (%li)", error_message(kerror), kerror);
+
+  if(RTEST(v_strings)){
+    v_return = rb_ary_new();
+
+    for(i = 0; i < sizeof(privs); i++){
+      result |= (privs & 1 << i);
+      switch(privs & 1 << i){
+        case KADM5_PRIV_GET:
+          rb_ary_push(v_return, rb_str_new2("GET"));
+          break;
+        case KADM5_PRIV_ADD:
+          rb_ary_push(v_return, rb_str_new2("ADD"));
+          break;
+        case KADM5_PRIV_MODIFY:
+          rb_ary_push(v_return, rb_str_new2("MODIFY"));
+          break;
+        case KADM5_PRIV_DELETE:
+          rb_ary_push(v_return, rb_str_new2("DELETE"));
+          break;
+        default:
+          rb_ary_push(v_return, rb_str_new2("UNKNOWN"));
+      };
+    }
+  }
+  else{
+    for(i = 0; i < sizeof(privs); i++){
+      result |= (privs & 1 << i);
+    }
+    v_return = INT2FIX(result);
+  }
+  
+  return v_return;
+}
+
 void Init_kadm5(){
   /* The Kadm5 class encapsulates administrative Kerberos functions. */
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
@@ -863,6 +927,7 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "get_policies", rkadm5_get_policies, -1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
   rb_define_method(cKadm5, "get_principals", rkadm5_get_principals, -1);
+  rb_define_method(cKadm5, "get_privileges", rkadm5_get_privs, -1);
   rb_define_method(cKadm5, "modify_policy", rkadm5_modify_policy, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
