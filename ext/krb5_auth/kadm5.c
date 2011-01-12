@@ -736,6 +736,100 @@ static VALUE rkadm5_modify_policy(VALUE self, VALUE v_policy){
   return self;
 }
 
+/* 
+ * call-seq:
+ *   kadm5.get_policies(expr = nil)
+ *
+ * Returns a list of policy names matching +expr+, or all policy names if
+ * +expr+ is nil.
+ *
+ * The valid characters for +expr+ are '*', '?', '[]' and '\'. All other
+ * characters match themselves.
+ *
+ *  kadm5.get_policies          # => Get all policies
+ *  kadm5.get_policies('test*') # => Get all policies that start with 'test'
+ */
+static VALUE rkadm5_get_policies(int argc, VALUE* argv, VALUE self){
+  RUBY_KADM5* ptr;
+  VALUE v_array, v_expr;
+  kadm5_ret_t kerror;
+  char** pols;
+  char* expr;
+  int i, count;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  rb_scan_args(argc, argv, "01", &v_expr);
+
+  if(NIL_P(v_expr))
+    expr = NULL;
+  else
+    expr = StringValuePtr(v_expr);
+
+  kerror = kadm5_get_policies(ptr->handle, expr, &pols, &count);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_get_policies: %s (%li)", error_message(kerror), kerror);
+
+  v_array = rb_ary_new();
+
+  for(i = 0; i < count; i++){
+    rb_ary_push(v_array, rb_str_new2(pols[i]));
+  }
+
+  kadm5_free_name_list(ptr->handle, pols, count);
+
+  return v_array;
+}
+
+/* 
+ * call-seq:
+ *   kadm5.get_principals(expr = nil)
+ *
+ * Returns a list of principals matching +expr+, or all principals if
+ * +expr+ is nil.
+ *
+ * The valid characters for +expr+ are '*', '?', '[]' and '\'. All other
+ * characters match themselves.
+ *
+ * Example:
+ *
+ *  kadm5.get_principals          # => Get all principals
+ *  kadm5.get_principals('test*') # => Get all principals that start with 'test'
+ */
+static VALUE rkadm5_get_principals(int argc, VALUE* argv, VALUE self){
+  RUBY_KADM5* ptr;
+  VALUE v_array, v_expr;
+  kadm5_ret_t kerror;
+  char** princs;
+  char* expr;
+  int i, count;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  rb_scan_args(argc, argv, "01", &v_expr);
+
+  if(NIL_P(v_expr))
+    expr = NULL;
+  else
+    expr = StringValuePtr(v_expr);
+
+  kerror = kadm5_get_principals(ptr->handle, expr, &princs, &count);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_get_principals: %s (%li)", error_message(kerror), kerror);
+
+  v_array = rb_ary_new();
+
+  for(i = 0; i < count; i++){
+    rb_ary_push(v_array, rb_str_new2(princs[i]));
+  }
+
+  kadm5_free_name_list(ptr->handle, princs, count);
+
+  return v_array;
+}
+
 void Init_kadm5(){
   /* The Kadm5 class encapsulates administrative Kerberos functions. */
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
@@ -766,7 +860,9 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "find_principal", rkadm5_find_principal, 1);
   rb_define_method(cKadm5, "find_policy", rkadm5_find_policy, 1);
   rb_define_method(cKadm5, "get_policy", rkadm5_get_policy, 1);
+  rb_define_method(cKadm5, "get_policies", rkadm5_get_policies, -1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
+  rb_define_method(cKadm5, "get_principals", rkadm5_get_principals, -1);
   rb_define_method(cKadm5, "modify_policy", rkadm5_modify_policy, 1);
   rb_define_method(cKadm5, "set_password", rkadm5_set_password, 2);
 
