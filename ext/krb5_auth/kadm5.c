@@ -894,6 +894,46 @@ static VALUE rkadm5_get_privs(int argc, VALUE* argv, VALUE self){
   return v_return;
 }
 
+/*
+ * call-seq:
+ *   kadm.generate_random_key(principal)
+ *
+ * Generates and assigns a new random key to the named +principal+ and
+ * returns the number of generated keys.
+ */
+static VALUE rkadm5_randkey_principal(VALUE self, VALUE v_user){
+  RUBY_KADM5* ptr;
+  krb5_keyblock* keys;
+  kadm5_ret_t kerror;
+  krb5_principal princ;
+  char* user;
+  int n_keys, i;
+
+  Data_Get_Struct(self, RUBY_KADM5, ptr);
+
+  user = StringValuePtr(v_user);
+
+  if(!ptr->ctx)
+    rb_raise(cKadm5Exception, "no context has been established");
+
+  kerror = krb5_parse_name(ptr->ctx, user, &princ);
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "krb5_parse_name: %s", error_message(kerror));
+
+  kerror = kadm5_randkey_principal(ptr->handle, princ, &keys, &n_keys); 
+
+  if(kerror)
+    rb_raise(cKadm5Exception, "kadm5_randkey_principal: %s (%li)", error_message(kerror), kerror);
+
+  for(i = 0; i < n_keys; i++)
+    krb5_free_keyblock_contents(ptr->ctx, &keys[i]);
+
+  free(keys);
+
+  return INT2NUM(n_keys);
+}
+
 void Init_kadm5(){
   /* The Kadm5 class encapsulates administrative Kerberos functions. */
   cKadm5 = rb_define_class_under(mKerberos, "Kadm5", rb_cObject);
@@ -923,6 +963,7 @@ void Init_kadm5(){
   rb_define_method(cKadm5, "delete_principal", rkadm5_delete_principal, 1);
   rb_define_method(cKadm5, "find_principal", rkadm5_find_principal, 1);
   rb_define_method(cKadm5, "find_policy", rkadm5_find_policy, 1);
+  rb_define_method(cKadm5, "generate_random_key", rkadm5_randkey_principal, 1);
   rb_define_method(cKadm5, "get_policy", rkadm5_get_policy, 1);
   rb_define_method(cKadm5, "get_policies", rkadm5_get_policies, -1);
   rb_define_method(cKadm5, "get_principal", rkadm5_get_principal, 1);
