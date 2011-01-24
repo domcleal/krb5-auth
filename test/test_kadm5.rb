@@ -288,6 +288,36 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
     assert_raise(ArgumentError){ @kadm.find_principal(@user, @user) }
   end
 
+  test "generate_random_key basic functionality" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    @kadm.create_principal(@test_princ, "changeme")
+    assert_respond_to(@kadm, :generate_random_key)
+    assert_nothing_raised{ @kadm.generate_random_key(@test_princ) }
+  end
+
+  test "generate_random_key returns the number of keys generated" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    @kadm.create_principal(@test_princ, "changeme")
+    assert_kind_of(Fixnum, @kadm.generate_random_key(@test_princ))
+    assert_true(@kadm.generate_random_key(@test_princ) > 0)
+  end
+
+  test "generate_random_key requires one argument" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_raise(ArgumentError){ @kadm.generate_random_key }
+    assert_raise(ArgumentError){ @kadm.generate_random_key(@test_princ, @test_princ) }
+  end
+
+  test "generate_random_key requires a string argument" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_raise(TypeError){ @kadm.generate_random_key(7) }
+  end
+
+  test "generate_random_key raises an error if the principal cannot be found" do
+    @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    assert_raise(Krb5Auth::Kadm5::Exception){ @kadm.generate_random_key('bogus') }
+  end
+
   test "get_policy basic functionality" do
     assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
     assert_respond_to(@kadm, :get_policy)
