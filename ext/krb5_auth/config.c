@@ -173,7 +173,7 @@ static VALUE rkadm5_config_inspect(VALUE self){
 
   Data_Get_Struct(self, RUBY_KADM5_CONFIG, ptr); 
 
-  v_str = rb_str_buf_new2("#<");
+  v_str = rb_str_new2("#<");
   rb_str_buf_cat2(v_str, rb_obj_classname(self));
   rb_str_buf_cat2(v_str, " ");
 
