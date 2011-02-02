@@ -56,6 +56,13 @@ namespace :gem do
   end
 end
 
+namespace :sample do
+  desc "Run the sample configuration display program"
+  task :config => [:compile] do
+    sh "ruby -Ilib samples/sample_config_display.rb"
+  end
+end
+
 namespace 'test' do
   Rake::TestTask.new('all') do |t|
     task :all => [:clean, :compile]
