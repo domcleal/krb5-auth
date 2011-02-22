@@ -151,6 +151,35 @@ static VALUE rkrb5_ccache_default_name(VALUE self){
 
 /*
  * call-seq:
+ *   ccache.primary_principal
+ *
+ * Returns the name of the primary principal of the credentials cache.
+ */
+static VALUE rkrb5_ccache_primary_principal(VALUE self){
+  RUBY_KRB5_CCACHE* ptr;
+  krb5_error_code kerror;
+  char* name;
+
+  Data_Get_Struct(self, RUBY_KRB5_CCACHE, ptr);
+
+  if(!ptr->ctx)
+    rb_raise(cKrb5Exception, "no context has been established");
+
+  kerror = krb5_cc_get_principal(ptr->ctx, ptr->ccache, &ptr->principal);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_cc_get_principal: %s", error_message(kerror));
+
+  kerror = krb5_unparse_name(ptr->ctx, ptr->principal, &name);
+
+  if(kerror)
+    rb_raise(cKrb5Exception, "krb5_unparse_name: %s", error_message(kerror));
+
+  return rb_str_new2(name);
+}
+
+/*
+ * call-seq:
  *   ccache.destroy
  *
  * Destroy the credentials cache of the current principal. This also closes
@@ -214,6 +243,7 @@ void Init_ccache(){
   rb_define_method(cKrb5CCache, "close", rkrb5_ccache_close, 0);
   rb_define_method(cKrb5CCache, "default_name", rkrb5_ccache_default_name, 0);
   rb_define_method(cKrb5CCache, "destroy", rkrb5_ccache_destroy, 0);
+  rb_define_method(cKrb5CCache, "primary_principal", rkrb5_ccache_primary_principal, 0);
 
   // Aliases
   rb_define_alias(cKrb5CCache, "delete", "destroy");

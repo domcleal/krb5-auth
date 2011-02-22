@@ -33,7 +33,7 @@ class TC_Krb5_Credentials_Cache < Test::Unit::TestCase
 
   # Constructor
 
-  test "calling constructor with no arguments is legal" do 
+  test "calling constructor with no arguments is legal" do
     assert_nothing_raised{ @ccache = Krb5Auth::Krb5::CredentialsCache.new }
   end
 
@@ -83,7 +83,7 @@ class TC_Krb5_Credentials_Cache < Test::Unit::TestCase
   test "calling a method on a closed object raises an error" do
     @ccache = Krb5Auth::Krb5::CredentialsCache.new(@princ)
     @ccache.close
-    assert_raise(Krb5Auth::Krb5::Exception){ @ccache.default_name } 
+    assert_raise(Krb5Auth::Krb5::Exception){ @ccache.default_name }
   end
 
   test "default_name basic functionality" do
@@ -95,6 +95,19 @@ class TC_Krb5_Credentials_Cache < Test::Unit::TestCase
   test "default_name returns a string" do
     @ccache = Krb5Auth::Krb5::CredentialsCache.new(@princ)
     assert_kind_of(String, @ccache.default_name)
+  end
+
+  test "primary_principal basic functionality" do
+    @ccache = Krb5Auth::Krb5::CredentialsCache.new(@princ)
+    assert_respond_to(@ccache, :primary_principal)
+    assert_nothing_raised{ @ccache.primary_principal }
+  end
+
+  test "primary_principal returns expected results" do
+    @ccache = Krb5Auth::Krb5::CredentialsCache.new(@princ)
+    assert_kind_of(String, @ccache.primary_principal)
+    assert_true(@ccache.primary_principal.size > 0)
+    assert_true(@ccache.primary_principal.include?("@"))
   end
 
   test "destroy method basic functionality" do
@@ -122,7 +135,7 @@ class TC_Krb5_Credentials_Cache < Test::Unit::TestCase
   test "calling a method on a destroyed object raises an error" do
     @ccache = Krb5Auth::Krb5::CredentialsCache.new(@princ)
     @ccache.destroy
-    assert_raise(Krb5Auth::Krb5::Exception){ @ccache.default_name } 
+    assert_raise(Krb5Auth::Krb5::Exception){ @ccache.default_name }
   end
 
   test "destroy method does not accept any arguments" do
