@@ -427,8 +427,9 @@ static VALUE rkrb5_get_permitted_enctypes(VALUE self){
   if(!ptr->ctx)
     rb_raise(cKrb5Exception, "no context has been established");
 
+  kerror = krb5_get_permitted_enctypes(ptr->ctx, &ktypes);
 
-  if(krb5_get_permitted_enctypes(ptr->ctx, &ktypes)){
+  if(kerror){
     rb_raise(cKrb5Exception, "krb5_get_permitted_types: %s", error_message(kerror));
   }
   else{
