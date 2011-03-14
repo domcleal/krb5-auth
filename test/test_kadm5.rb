@@ -4,8 +4,11 @@
 # Tests for the Krb5Auth::Kadm5 class.
 #
 # This test suite requires that you have an entry in your .dbrc file
-# for 'test-kerberos' which includes an admin principal, password and
+# for 'local-kerberos' which includes an admin principal, password and
 # optional $KRB5_CONFIG file.
+#
+# Some keytab tests will fail if your local-kerberos entry is not
+# also in the keytab file.
 ########################################################################
 require 'rubygems'
 gem 'test-unit'
@@ -18,7 +21,7 @@ require 'socket'
 class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   def self.startup
     @@server = Krb5Auth::Kadm5::Config.new.admin_server
-    @@info = DBI::DBRC.new('test-kerberos')
+    @@info = DBI::DBRC.new('local-kerberos')
     @@host = Socket.gethostname
 
     # For local testing the FQDN may or may not be available, so let's assume
@@ -51,25 +54,37 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   end
 
   test "constructor with valid user and password works as expected" do
-    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass) }
+    assert_nothing_raised{
+      @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass)
+    }
   end
 
   test "constructor with valid service works as expected" do
     assert_nothing_raised{
-      @kadm = Krb5Auth::Kadm5.new(:principal => @user, :password => @pass, :service => "kadmin/admin")
+      @kadm = Krb5Auth::Kadm5.new(
+        :principal => @user,
+        :password  => @pass,
+        :service   => "kadmin/admin"
+      )
     }
   end
 
   test "constructor with valid user and default keytab works as expected" do
     omit_unless(@@host == @@server, "keytab on different host, skipping")
     omit_unless(File.exists?(@keytab), "default keytab file '#{@keytab}' not found")
-    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => true) }
+
+    assert_nothing_raised{
+      @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => true)
+    }
   end
 
   test "constructor with valid user and explicit keytab works as expected" do
     omit_unless(@@host == @@server, "keytab on different host, skipping")
     omit_unless(File.exists?(@keytab), "keytab file '#{@keytab}' not found")
-    assert_nothing_raised{ @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => @keytab) }
+
+    assert_nothing_raised{
+      @kadm = Krb5Auth::Kadm5.new(:principal => @user, :keytab => @keytab)
+    }
   end
 
   test "constructor only accepts a hash argument" do
@@ -102,7 +117,9 @@ class TC_Krb5Auth_Kadm5 < Test::Unit::TestCase
   end
 
   test "service value must be a string" do
-    assert_raise(TypeError){ Krb5Auth::Kadm5.new(:principal => @user, :password => @pass, :service => 1) }
+    assert_raise(TypeError){
+      Krb5Auth::Kadm5.new(:principal => @user, :password => @pass, :service => 1)
+    }
   end
 
   test "an error is raised if an invalid service name is used" do
