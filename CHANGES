@@ -3,9 +3,25 @@
   options instead of merely a principal and password. The possible options
   are :principal, :password, :service, and :keytab. This change breaks
   backwards compatibility with 0.8.x.
-* Added the initial underpinnings for a CredentialsCache object along with
-  a preliminary set of tests. It's still in an alpha stage, so it is not
-  recommended for production use at this time.
+* Principal structs have been removed. Only principal classes are used now.
+* The Principal.new method now requires a principal name.
+* Added the Krb5Auth::Policy class which encapsulates a Kerberos policy.
+* Added the Krb5Auth::CredentialsCache class which encapsulates a Kerberos
+  credentials cache.
+* Added the Kadm5::Config class which encapsulates Kerberos administrative
+  configuration information.
+* The Kadm5#create_principal method now accepts a Principal object as well.
+* Added the Kadm5#find_principal method. This is similar to the get_principal
+  method, but returns nil instead of raising an error if the principal cannot
+  be found.
+* The Kadm5#get_principal method now raises a PrincipalNotFoundException if
+  the principal cannot be found in order to distinguish that failure with some
+  other general failure.
+* Added the Kadm5#create_policy method.
+* Added the Principal#== method.
+* Added custom .inspect methods for several classes.
+* Lots of internal refactoring.
+* Many more tests added, along with some refactoring.
 
 = 0.8.5 - 28-Jul-2010
 * Fixed a bug where I had externs and variable declarations flip flopped
