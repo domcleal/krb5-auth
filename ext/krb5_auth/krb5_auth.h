@@ -19,7 +19,8 @@ void Init_keytab();
 void Init_keytab_entry();
 void Init_ccache();
 
-static VALUE rb_hash_aref2(VALUE, char*);
+// Defined in krb5_auth.c
+VALUE rb_hash_aref2(VALUE, char*);
 
 // Variable declarations
 extern VALUE mKerberos;
@@ -91,18 +92,4 @@ typedef struct {
   krb5_context ctx;
   kadm5_policy_ent_rec policy;
 } RUBY_KADM5_POLICY;
-
-// Get a hash value by string or symbol.
-static VALUE rb_hash_aref2(VALUE v_hash, char* key){
-  VALUE v_key, v_val;
-
-  v_key = rb_str_new2(key);
-  v_val = rb_hash_aref(v_hash, v_key); 
-
-  if(NIL_P(v_val))
-    v_val = rb_hash_aref(v_hash, ID2SYM(rb_intern(key)));
-
-  return v_val;
-}
-
 #endif

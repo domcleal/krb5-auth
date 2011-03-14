@@ -7,6 +7,18 @@ VALUE cKrb5Exception;
 // Function prototypes
 static VALUE rkrb5_close(VALUE);
 
+VALUE rb_hash_aref2(VALUE v_hash, char* key){
+  VALUE v_key, v_val;
+
+  v_key = rb_str_new2(key);
+  v_val = rb_hash_aref(v_hash, v_key);
+
+  if(NIL_P(v_val))
+    v_val = rb_hash_aref(v_hash, ID2SYM(rb_intern(key)));
+
+  return v_val;
+}
+
 // Free function for the Krb5Auth::Krb5 class.
 static void rkrb5_free(RUBY_KRB5* ptr){
   if(!ptr)
