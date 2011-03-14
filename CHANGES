@@ -17,7 +17,8 @@
 * The Kadm5#get_principal method now raises a PrincipalNotFoundException if
   the principal cannot be found in order to distinguish that failure with some
   other general failure.
-* Added the Kadm5#create_policy method.
+* Added several more Kadm5 methods, including methods for creating, modifying,
+  and deleting policies.
 * Added the Principal#== method.
 * Added custom .inspect methods for several classes.
 * Lots of internal refactoring.
